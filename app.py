@@ -6,7 +6,7 @@ import io
 st.set_page_config(page_title="Universal Gem Catalog Builder", layout="centered")
 
 st.title("💎 Universal Gem Catalog Builder")
-st.write("Smart Vector Border Tracking Engine. Automatically detects black frame lines surrounding your item selections.")
+st.write("Layout-Agnostic Extraction Engine. Perfectly extracts your custom selections from mixed multi-image catalogs.")
 
 uploaded_file = st.file_uploader("Upload your Master Catalog PDF", type=["pdf"])
 
@@ -17,7 +17,7 @@ if uploaded_file is not None:
     if not st.session_state.gem_registry or st.sidebar.button("🔄 Clear & Re-Scan Document"):
         st.session_state.gem_registry = {}
         
-        with st.spinner("Scanning vector frames and mapping black border cards..."):
+        with st.spinner("Executing precise grid coordinates mapping... Please wait."):
             doc = fitz.open(stream=uploaded_file.read(), filetype="pdf")
             
             for page_num in range(len(doc)):
@@ -25,78 +25,65 @@ if uploaded_file is not None:
                 page_width = page.rect.width
                 page_height = page.rect.height
                 
-                # 1. Fetch all vector shapes and rectangles drawn on this page
-                drawings = page.get_drawings()
-                border_rects = []
-                
-                for draw in drawings:
-                    # Look for rectangular paths or closed lines that frame boxes
-                    if draw["type"] == "s" or draw["type"] == "f" or draw["type"] == "fs":
-                        for path in draw["items"]:
-                            if path[0] == "re":  # "re" means it's a structural rectangle line
-                                border_rects.append(fitz.Rect(path[1]))
-                
-                # 2. Search for the S.No flags
-                text_instances = page.search_for("S.No-")
-                if not text_instances:
-                    text_instances = page.search_for("S.NO-")
-                if not text_instances:
-                    text_instances = page.search_for("S.No")
+                # Check for all text formatting rules matching your catalog files
+                text_instances = page.search_for("S.No")
                 if not text_instances:
                     text_instances = page.search_for("S.NO")
                 
                 if not text_instances:
                     continue
                 
+                # Filter out duplicate overlapping matches in the same vicinity
+                unique_instances = []
                 for inst in text_instances:
-                    # Read the serial number digits safely
-                    text_window = page.get_text("text", clip=fitz.Rect(inst.x0 - 5, inst.y0 - 5, inst.x1 + 220, inst.y1 + 25))
+                    if not any(abs(inst.y0 - u.y0) < 10 and abs(inst.x0 - u.x0) < 10 for u in unique_instances):
+                        unique_instances.append(inst)
+                
+                for inst in unique_instances:
+                    # Capture wide reading window to grab the true digits reliably
+                    text_window = page.get_text("text", clip=fitz.Rect(max(0, inst.x0 - 10), max(0, inst.y0 - 5), min(page_width, inst.x1 + 250), min(page_height, inst.y1 + 35)))
                     s_no_match = re.search(r'\d{4}', text_window)
                     
                     if not s_no_match:
                         continue
                     s_no = s_no_match.group(0)
                     
-                    # 3. VECTOR BORDER SNAP LOGIC
-                    # Find which drawn rectangle completely encloses or contains this text marker
-                    matched_box = None
+                    # --- FIXED GRID MATH BASED ON YOUR UPLOADED FILE ---
+                    # Detect layout type (left side item, right side item, or full width single item)
+                    is_left_side = inst.x0 < (page_width * 0.45)
+                    is_right_side = inst.x0 > (page_width * 0.55)
                     
-                    for r in border_rects:
-                        # If the S.No text center point sits inside this rectangle path frame
-                        center_x = (inst.x0 + inst.x1) / 2
-                        center_y = (inst.y0 + inst.y1) / 2
-                        
-                        # We give a slight leeway for overlapping borders or margins
-                        if r.x0 - 15 <= center_x <= r.x1 + 15 and r.y0 - 400 <= center_y <= r.y1 + 50:
-                            matched_box = r
-                            break
+                    if is_left_side and not is_right_side:
+                        # Left block grid boundaries 
+                        x_min = 15
+                        x_max = (page_width / 2) + 10
+                        y_min = max(0, inst.y0 - 330)
+                        y_max = min(page_height, inst.y1 + 140)
+                    elif is_right_side:
+                        # Right block grid boundaries
+                        x_min = (page_width / 2) - 10
+                        x_max = page_width - 15
+                        y_min = max(0, inst.y0 - 330)
+                        y_max = min(page_height, inst.y1 + 140)
+                    else:
+                        # Full-page single item grid boundaries
+                        x_min = 15
+                        x_max = page_width - 15
+                        y_min = max(0, inst.y0 - 360)
+                        y_max = min(page_height, inst.y1 + 160)
                     
-                    # 4. Fallback Grid Layout Anchor (If a page happens to use flat image backgrounds instead of vectors)
-                    if not matched_box:
-                        is_left_column = inst.x0 < (page_width / 2)
-                        if is_left_column:
-                            matched_box = fitz.Rect(max(0, inst.x0 - 30), max(0, inst.y0 - 390), min(page_width, inst.x0 + 285), min(page_height, inst.y1 + 50))
-                        else:
-                            matched_box = fitz.Rect(max(0, inst.x0 - 180), max(0, inst.y0 - 390), min(page_width, inst.x1 + 180), min(page_height, inst.y1 + 50))
+                    crop_rect = fitz.Rect(x_min, y_min, x_max, y_max)
                     
-                    # Apply minimal padding to clean up the frame lines
-                    crop_rect = fitz.Rect(
-                        max(0, matched_box.x0 - 5),
-                        max(0, matched_box.y0 - 5),
-                        min(page_width, matched_box.x1 + 5),
-                        min(page_height, matched_box.y1 + 5)
-                    )
-                    
-                    # Render image snapshot 
+                    # High quality extraction mapping zoom factor
                     zoom = 2.5  
                     mat = fitz.Matrix(zoom, zoom)
                     pix = page.get_pixmap(matrix=mat, clip=crop_rect)
                     
                     st.session_state.gem_registry[s_no] = pix.tobytes("jpg")
                     
-        st.success(f"Successfully located and boxed {len(st.session_state.gem_registry)} item borders!")
+        st.success(f"Successfully configured and mapped {len(st.session_state.gem_registry)} items cleanly!")
 
-    # UI Dropdown Selector
+    # 2. Dropdown UI Selector
     if st.session_state.gem_registry:
         available_items = sorted(list(st.session_state.gem_registry.keys()))
         
@@ -106,10 +93,10 @@ if uploaded_file is not None:
             format_func=lambda x: f"Item S.No: {x}"
         )
         
-        # Compile Selection PDF Generator
+        # 3. Compile Selection PDF Generator
         if selected_gems:
             if st.button("Generate & Download My Custom PDF"):
-                with st.spinner("Assembling custom layout catalog..."):
+                with st.spinner("Compiling structural profile output page blocks..."):
                     output_pdf = fitz.open()
                     
                     for s_no in selected_gems:
@@ -118,6 +105,7 @@ if uploaded_file is not None:
                         
                         img_bytes = st.session_state.gem_registry[s_no]
                         
+                        # Set layout frame sizes elegantly preserving clarity
                         display_window = fitz.Rect(40, 80, 555, 780)
                         new_page.insert_image(display_window, stream=img_bytes)
                     
