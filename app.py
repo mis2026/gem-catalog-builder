@@ -6,7 +6,7 @@ import io
 st.set_page_config(page_title="Universal Gem Catalog Builder", layout="centered")
 
 st.title("💎 Universal Gem Catalog Builder")
-st.write("Dynamic grid layout extraction engine. Automatically crops full catalog layouts safely.")
+st.write("Smart Vector Border Tracking Engine. Automatically detects black frame lines surrounding your item selections.")
 
 uploaded_file = st.file_uploader("Upload your Master Catalog PDF", type=["pdf"])
 
@@ -17,7 +17,7 @@ if uploaded_file is not None:
     if not st.session_state.gem_registry or st.sidebar.button("🔄 Clear & Re-Scan Document"):
         st.session_state.gem_registry = {}
         
-        with st.spinner("Processing dynamic catalog page grid coordinates..."):
+        with st.spinner("Scanning vector frames and mapping black border cards..."):
             doc = fitz.open(stream=uploaded_file.read(), filetype="pdf")
             
             for page_num in range(len(doc)):
@@ -25,7 +25,18 @@ if uploaded_file is not None:
                 page_width = page.rect.width
                 page_height = page.rect.height
                 
-                # Scan for all common variations including the specific hyphen structure
+                # 1. Fetch all vector shapes and rectangles drawn on this page
+                drawings = page.get_drawings()
+                border_rects = []
+                
+                for draw in drawings:
+                    # Look for rectangular paths or closed lines that frame boxes
+                    if draw["type"] == "s" or draw["type"] == "f" or draw["type"] == "fs":
+                        for path in draw["items"]:
+                            if path[0] == "re":  # "re" means it's a structural rectangle line
+                                border_rects.append(fitz.Rect(path[1]))
+                
+                # 2. Search for the S.No flags
                 text_instances = page.search_for("S.No-")
                 if not text_instances:
                     text_instances = page.search_for("S.NO-")
@@ -34,12 +45,11 @@ if uploaded_file is not None:
                 if not text_instances:
                     text_instances = page.search_for("S.NO")
                 
-                # SAFETY FILTER: If this page has no matching text instances, skip to the next page safely
                 if not text_instances:
                     continue
                 
                 for inst in text_instances:
-                    # Look right of the prefix to read the 4-digit sequence safely
+                    # Read the serial number digits safely
                     text_window = page.get_text("text", clip=fitz.Rect(inst.x0 - 5, inst.y0 - 5, inst.x1 + 220, inst.y1 + 25))
                     s_no_match = re.search(r'\d{4}', text_window)
                     
@@ -47,32 +57,44 @@ if uploaded_file is not None:
                         continue
                     s_no = s_no_match.group(0)
                     
-                    # --- INTELLIGENT GRID-AWARE CROPPING ---
-                    is_left_column = inst.x0 < (page_width / 2)
+                    # 3. VECTOR BORDER SNAP LOGIC
+                    # Find which drawn rectangle completely encloses or contains this text marker
+                    matched_box = None
                     
-                    if is_left_column:
-                        # Left column boundaries
-                        x_min = max(0, inst.x0 - 30)
-                        x_max = min(page_width, inst.x0 + 280)
-                    else:
-                        # Right column boundaries
-                        x_min = max(0, inst.x0 - 180)
-                        x_max = min(page_width, inst.x1 + 180)
+                    for r in border_rects:
+                        # If the S.No text center point sits inside this rectangle path frame
+                        center_x = (inst.x0 + inst.x1) / 2
+                        center_y = (inst.y0 + inst.y1) / 2
                         
-                    # Push crop bounds way higher (380px) to ensure no tall gemstone images get sliced in half
-                    y_min = max(0, inst.y0 - 380)
-                    y_max = min(page_height, inst.y1 + 60) # Keep text label at the bottom safely
+                        # We give a slight leeway for overlapping borders or margins
+                        if r.x0 - 15 <= center_x <= r.x1 + 15 and r.y0 - 400 <= center_y <= r.y1 + 50:
+                            matched_box = r
+                            break
                     
-                    crop_rect = fitz.Rect(x_min, y_min, x_max, y_max)
+                    # 4. Fallback Grid Layout Anchor (If a page happens to use flat image backgrounds instead of vectors)
+                    if not matched_box:
+                        is_left_column = inst.x0 < (page_width / 2)
+                        if is_left_column:
+                            matched_box = fitz.Rect(max(0, inst.x0 - 30), max(0, inst.y0 - 390), min(page_width, inst.x0 + 285), min(page_height, inst.y1 + 50))
+                        else:
+                            matched_box = fitz.Rect(max(0, inst.x0 - 180), max(0, inst.y0 - 390), min(page_width, inst.x1 + 180), min(page_height, inst.y1 + 50))
                     
-                    # Render high quality crisp snap
+                    # Apply minimal padding to clean up the frame lines
+                    crop_rect = fitz.Rect(
+                        max(0, matched_box.x0 - 5),
+                        max(0, matched_box.y0 - 5),
+                        min(page_width, matched_box.x1 + 5),
+                        min(page_height, matched_box.y1 + 5)
+                    )
+                    
+                    # Render image snapshot 
                     zoom = 2.5  
                     mat = fitz.Matrix(zoom, zoom)
                     pix = page.get_pixmap(matrix=mat, clip=crop_rect)
                     
                     st.session_state.gem_registry[s_no] = pix.tobytes("jpg")
                     
-        st.success(f"Successfully configured and mapped {len(st.session_state.gem_registry)} dynamic items!")
+        st.success(f"Successfully located and boxed {len(st.session_state.gem_registry)} item borders!")
 
     # UI Dropdown Selector
     if st.session_state.gem_registry:
@@ -87,7 +109,7 @@ if uploaded_file is not None:
         # Compile Selection PDF Generator
         if selected_gems:
             if st.button("Generate & Download My Custom PDF"):
-                with st.spinner("Compiling structural profile output page blocks..."):
+                with st.spinner("Assembling custom layout catalog..."):
                     output_pdf = fitz.open()
                     
                     for s_no in selected_gems:
@@ -96,7 +118,6 @@ if uploaded_file is not None:
                         
                         img_bytes = st.session_state.gem_registry[s_no]
                         
-                        # Preserve original proportions inside an elegant layout window frame
                         display_window = fitz.Rect(40, 80, 555, 780)
                         new_page.insert_image(display_window, stream=img_bytes)
                     
