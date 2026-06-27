@@ -23,68 +23,70 @@ html, body,
     background: #E4E6ED !important;
 }
 
-/* Kill chrome */
 #MainMenu, footer, header,
 [data-testid="stDecoration"],
 [data-testid="stToolbar"],
 [data-testid="stSidebar"] { display: none !important; }
 
-/* Center block */
 .block-container {
     max-width: 860px !important;
     padding: 52px 20px 60px !important;
 }
 
-/* ══════════════════════════════════════════════
-   THE CARD: target the stHorizontalBlock that
-   contains our two columns
-   ══════════════════════════════════════════════ */
-[data-testid="stHorizontalBlock"] {
-    border-radius: 18px !important;
+/* ── OUTER CARD: only the TOP-LEVEL columns row ── */
+div.block-container > div > div > div > [data-testid="stHorizontalBlock"] {
+    border-radius: 16px !important;
     overflow: hidden !important;
-    box-shadow: 0 6px 40px rgba(0,0,0,0.16) !important;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.14) !important;
     gap: 0 !important;
     align-items: stretch !important;
-    background: #151C2C !important;
 }
 
-/* LEFT column = dark sidebar */
-[data-testid="stColumn"]:first-child {
+/* ── LEFT col (sidebar) — only the direct first child of top-level row ── */
+div.block-container > div > div > div > [data-testid="stHorizontalBlock"]
+  > [data-testid="stColumn"]:first-child {
     background: #151C2C !important;
-    min-width: 210px !important;
-    max-width: 210px !important;
+    min-width: 200px !important;
+    max-width: 200px !important;
     padding: 36px 22px !important;
     flex-shrink: 0 !important;
 }
-[data-testid="stColumn"]:first-child > div {
+div.block-container > div > div > div > [data-testid="stHorizontalBlock"]
+  > [data-testid="stColumn"]:first-child > div {
     padding: 0 !important;
     gap: 0 !important;
 }
 
-/* RIGHT column = white content */
-[data-testid="stColumn"]:last-child {
+/* ── RIGHT col (content) — only the direct last child of top-level row ── */
+div.block-container > div > div > div > [data-testid="stHorizontalBlock"]
+  > [data-testid="stColumn"]:last-child {
     background: #ffffff !important;
-    flex: 1 !important;
     padding: 36px 36px 32px !important;
-    border-left: none !important;
+    flex: 1 !important;
 }
-[data-testid="stColumn"]:last-child > div {
+div.block-container > div > div > div > [data-testid="stHorizontalBlock"]
+  > [data-testid="stColumn"]:last-child > div {
     padding: 0 !important;
-}
-
-/* Remove default streamlit column padding/gap */
-[data-testid="stColumn"] {
-    padding: 0 !important;
-}
-[data-testid="stVerticalBlock"] {
     gap: 0 !important;
 }
+
+/* ── ALL nested columns inside right panel = white, no bg override ── */
+div.block-container > div > div > div > [data-testid="stHorizontalBlock"]
+  > [data-testid="stColumn"]:last-child [data-testid="stColumn"] {
+    background: transparent !important;
+    padding: 0 4px !important;
+}
+
+/* Remove default streamlit gaps */
+[data-testid="stVerticalBlock"] { gap: 0 !important; }
+.stMarkdown { margin: 0 !important; }
+div[data-testid="stVerticalBlockBorderWrapper"] { padding: 0 !important; }
 
 /* ── Sidebar elements ── */
 .sb-brand {
     font-size: 9px; font-weight: 700; letter-spacing: .18em;
-    color: #3A506B; text-transform: uppercase; margin-bottom: 18px;
-    display: block;
+    color: #3A506B; text-transform: uppercase;
+    margin-bottom: 18px; display: block;
 }
 .sb-title {
     font-size: 17px; font-weight: 700; color: #fff;
@@ -98,12 +100,12 @@ html, body,
     content: ''; position: absolute; left: 9px; top: 32px;
     width: 2px; height: 18px; background: #1E2D45;
 }
-.da { width:19px;height:19px;border-radius:50%;flex-shrink:0;
-      background:#3B82F6;box-shadow:0 0 0 4px rgba(59,130,246,.2); }
-.dd { width:19px;height:19px;border-radius:50%;flex-shrink:0;
+.da { width:18px;height:18px;border-radius:50%;flex-shrink:0;
+      background:#3B82F6;box-shadow:0 0 0 3px rgba(59,130,246,.22); }
+.dd { width:18px;height:18px;border-radius:50%;flex-shrink:0;
       background:transparent;border:2px solid #3B82F6; }
-.dp { width:19px;height:19px;border-radius:50%;flex-shrink:0;
-      background:#1C2B40;border:2px solid #283D57; }
+.dp { width:18px;height:18px;border-radius:50%;flex-shrink:0;
+      background:#1C2B40;border:2px solid #263A55; }
 .la { font-size: 12px; font-weight: 600; color: #fff; }
 .ld { font-size: 12px; font-weight: 500; color: #4B7BCA; }
 .lp { font-size: 12px; font-weight: 400; color: #324560; }
@@ -120,14 +122,14 @@ html, body,
 }
 .ps {
     font-size: 12px; color: #94A3B8;
-    margin-bottom: 22px; display: block;
+    margin-bottom: 20px; display: block;
 }
 .lbl {
     font-size: 9px; font-weight: 700; letter-spacing: .12em;
     color: #B0BCCC; text-transform: uppercase;
     margin-bottom: 7px; display: block;
 }
-.divl { height:1px; background:#F1F5F9; margin: 18px 0; }
+.divl { height: 1px; background: #F1F5F9; margin: 16px 0; }
 .hrow {
     display: flex; justify-content: space-between;
     align-items: center; margin-bottom: 9px;
@@ -139,8 +141,7 @@ html, body,
     padding: 3px 9px; border-radius: 999px;
 }
 
-/* ── Scanning animation ── */
-.scan-wrap { margin: 16px 0 4px; }
+/* ── Scan animation ── */
 .scan-msg {
     font-size: 12px; color: #64748B;
     display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
@@ -154,10 +155,7 @@ html, body,
     0%,100% { opacity:1; transform:scale(1); }
     50%      { opacity:.3; transform:scale(.65); }
 }
-.prog-track {
-    height: 5px; background: #F1F5F9;
-    border-radius: 999px; overflow: hidden;
-}
+.prog-track { height: 5px; background: #F1F5F9; border-radius: 999px; overflow: hidden; }
 .prog-bar {
     height: 5px;
     background: linear-gradient(90deg, #3B82F6, #818CF8);
@@ -169,20 +167,19 @@ html, body,
     0%   { transform: translateX(-110%); }
     100% { transform: translateX(280%); }
 }
-.pg-count {
-    font-size: 11px; color: #94A3B8; margin-top: 5px;
-}
+.pg-count { font-size: 11px; color: #94A3B8; margin-top: 5px; }
 
-/* ── Widgets ── */
+/* ── File uploader ── */
 [data-testid="stFileUploader"] {
     border: 1.5px solid #E2E8F0 !important;
     border-radius: 9px !important;
     background: #FAFBFC !important;
     padding: 2px 8px !important;
-    margin-bottom: 12px !important;
+    margin-bottom: 10px !important;
 }
 [data-testid="stFileUploader"] section { padding: 4px 0 !important; }
 
+/* ── Multiselect ── */
 [data-testid="stMultiSelect"] > div > div {
     border: 1.5px solid #E2E8F0 !important;
     border-radius: 8px !important;
@@ -195,7 +192,7 @@ html, body,
     box-shadow: 0 0 0 3px rgba(59,130,246,.1) !important;
 }
 
-/* Primary button */
+/* ── Primary button ── */
 [data-testid="stButton"] > button {
     background: #2563EB !important; color: #fff !important;
     border: none !important; border-radius: 8px !important;
@@ -205,7 +202,7 @@ html, body,
 }
 [data-testid="stButton"] > button:hover { background: #1D4ED8 !important; }
 
-/* Secondary re-scan */
+/* ── Secondary re-scan ── */
 .sec [data-testid="stButton"] > button {
     background: #F1F5F9 !important;
     color: #475569 !important;
@@ -213,7 +210,7 @@ html, body,
 }
 .sec [data-testid="stButton"] > button:hover { background: #E2E8F0 !important; }
 
-/* Download */
+/* ── Download ── */
 [data-testid="stDownloadButton"] > button {
     background: #059669 !important; color: #fff !important;
     border: none !important; border-radius: 8px !important;
@@ -222,22 +219,28 @@ html, body,
 }
 [data-testid="stDownloadButton"] > button:hover { background: #047857 !important; }
 
+/* ── Images ── */
 [data-testid="stImage"] img {
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,.10);
+    border-radius: 8px !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,.10) !important;
+    display: block !important;
 }
+
+/* ── Alert ── */
 [data-testid="stAlert"] { border-radius: 8px !important; font-size: 13px !important; }
 [data-testid="stSpinner"] > div { display: none !important; }
 
-/* Remove extra spacing streamlit adds around elements */
-.stMarkdown { margin: 0 !important; }
-div[data-testid="stVerticalBlockBorderWrapper"] { padding: 0 !important; }
+/* ── Image caption ── */
+[data-testid="stImage"] > div > div {
+    font-size: 11px !important; color: #94A3B8 !important;
+    text-align: center !important; margin-top: 5px !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# CORE LOGIC  — unchanged scan logic + border removal
+# CORE LOGIC — unchanged + border removal
 # ══════════════════════════════════════════════════════════════════════════════
 GRID_X, GRID_Y, RENDER_ZOOM = 360, 277, 2.5
 
@@ -245,13 +248,12 @@ if "gem_registry"  not in st.session_state: st.session_state.gem_registry  = {}
 if "selected_snos" not in st.session_state: st.session_state.selected_snos = []
 
 
-def _remove_border(arr_rgb: np.ndarray, dark: int = 40) -> np.ndarray:
-    """Remove outer black rectangle border from a rendered gem region."""
-    h, w  = arr_rgb.shape[:2]
-    gray  = arr_rgb.mean(axis=2)
-    rd    = (gray < dark).sum(axis=1)   # dark pixels per row
-    cd    = (gray < dark).sum(axis=0)   # dark pixels per col
-    frac  = 0.40
+def _remove_border(arr: np.ndarray, dark: int = 40) -> np.ndarray:
+    h, w = arr.shape[:2]
+    gray = arr.mean(axis=2)
+    rd   = (gray < dark).sum(axis=1)
+    cd   = (gray < dark).sum(axis=0)
+    frac = 0.40
     tr = np.where((rd > w * frac) & (np.arange(h) < h * .45))[0]
     br = np.where((rd > w * frac) & (np.arange(h) > h * .55))[0]
     lc = np.where((cd > h * frac) & (np.arange(w) < w * .45))[0]
@@ -260,13 +262,12 @@ def _remove_border(arr_rgb: np.ndarray, dark: int = 40) -> np.ndarray:
     b  = int(br.min())     if len(br) else h
     l  = int(lc.max()) + 2 if len(lc) else 0
     r  = int(rc.min())     if len(rc) else w
-    return arr_rgb[t:b, l:r]
+    return arr[t:b, l:r]
 
 
 def _render_clean(page: fitz.Page, rect: fitz.Rect) -> bytes:
-    mat  = fitz.Matrix(RENDER_ZOOM, RENDER_ZOOM)
-    pix  = page.get_pixmap(matrix=mat, clip=rect)
-    arr  = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, pix.n)
+    pix   = page.get_pixmap(matrix=fitz.Matrix(RENDER_ZOOM, RENDER_ZOOM), clip=rect)
+    arr   = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, pix.n)
     clean = _remove_border(arr[:, :, :3])
     buf   = io.BytesIO()
     Image.fromarray(clean).save(buf, "JPEG", quality=88)
@@ -276,9 +277,9 @@ def _render_clean(page: fitz.Page, rect: fitz.Rect) -> bytes:
 def _quadrant_rect(page: fitz.Page, bbox) -> fitz.Rect:
     pw, ph = page.rect.width, page.rect.height
     l, t   = bbox[0] < GRID_X, bbox[1] < GRID_Y
-    if l  and t:     return fitz.Rect(0,      0,      GRID_X, GRID_Y)
+    if l and t:      return fitz.Rect(0,      0,      GRID_X, GRID_Y)
     if not l and t:  return fitz.Rect(GRID_X, 0,      pw,     GRID_Y)
-    if l  and not t: return fitz.Rect(0,      GRID_Y, GRID_X, ph)
+    if l and not t:  return fitz.Rect(0,      GRID_Y, GRID_X, ph)
     return fitz.Rect(GRID_X, GRID_Y, pw, ph)
 
 
@@ -299,7 +300,7 @@ def ss(i):
 
 STEPS = ["Upload", "Select S.No", "Preview", "Export PDF"]
 
-def sidebar_html():
+def make_sidebar():
     dc = {"active":"da","done":"dd","pending":"dp"}
     lc = {"active":"la","done":"ld","pending":"lp"}
     rows = "".join(
@@ -308,25 +309,21 @@ def sidebar_html():
         for i, lbl in enumerate(STEPS)
     )
     return f"""
-    <span class="sb-brand">Lunawat Gems</span>
-    <span class="sb-title">Gem Catalog<br>Builder</span>
-    {rows}
-    """
+<span class="sb-brand">Lunawat Gems</span>
+<span class="sb-title">Gem Catalog<br>Builder</span>
+{rows}"""
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# LAYOUT  — two columns styled as one card via CSS
+# LAYOUT
 # ══════════════════════════════════════════════════════════════════════════════
-col_left, col_right = st.columns([21, 79], gap="small")
+col_left, col_right = st.columns([22, 78], gap="small")
 
-# ── LEFT: pure HTML sidebar (no widgets) ──────────────────────────────────────
 with col_left:
-    st.markdown(sidebar_html(), unsafe_allow_html=True)
+    st.markdown(make_sidebar(), unsafe_allow_html=True)
 
-# ── RIGHT: all widgets ────────────────────────────────────────────────────────
 with col_right:
 
-    # Header
     st.markdown("""
     <span class="ey">Catalog Builder</span>
     <span class="pt">Upload your PDF catalog</span>
@@ -334,7 +331,6 @@ with col_right:
     <span class="lbl">Catalog File</span>
     """, unsafe_allow_html=True)
 
-    # Upload
     uploaded_file = st.file_uploader("PDF", type=["pdf"], label_visibility="collapsed")
 
     c1, c2 = st.columns([4, 1], gap="small")
@@ -345,7 +341,6 @@ with col_right:
         rescan_btn = st.button("🔄 Re-scan", use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # ── Scan logic ────────────────────────────────────────────────────────────
     if uploaded_file:
         file_bytes = uploaded_file.read()
 
@@ -358,28 +353,22 @@ with col_right:
 
         if needs_scan:
             st.markdown('<div class="divl"></div>', unsafe_allow_html=True)
-
-            # Animated progress UI
             st.markdown("""
-            <div class="scan-wrap">
-              <div class="scan-msg">
-                <div class="scan-dot"></div>
-                Scanning pages and removing borders…
-              </div>
-              <div class="prog-track"><div class="prog-bar"></div></div>
+            <div class="scan-msg">
+              <div class="scan-dot"></div>
+              Scanning pages and removing borders…
             </div>
+            <div class="prog-track"><div class="prog-bar"></div></div>
             """, unsafe_allow_html=True)
 
             pg_counter = st.empty()
-
-            # Scan page by page
-            doc       = fitz.open(stream=file_bytes, filetype="pdf")
-            total     = len(doc)
-            registry  = {}
+            doc        = fitz.open(stream=file_bytes, filetype="pdf")
+            total      = len(doc)
+            registry   = {}
 
             for pn in range(total):
                 pg_counter.markdown(
-                    f'<div class="pg-count">Page {pn+1} / {total}</div>',
+                    f'<div class="pg-count">Page {pn+1} of {total}</div>',
                     unsafe_allow_html=True,
                 )
                 page  = doc[pn]
@@ -390,7 +379,6 @@ with col_right:
                         txt = "".join(s["text"] for s in line["spans"])
                         m   = re.search(r'S\.No[-\s]*(\d+)', txt, re.IGNORECASE)
                         if m: lines.append((m.group(1), line["bbox"]))
-
                 if not lines: continue
                 multi = len(lines) > 1
                 for sno, bbox in lines:
@@ -399,17 +387,14 @@ with col_right:
 
             doc.close()
             pg_counter.empty()
-
             st.session_state.gem_registry = registry
             st.rerun()
 
         reg = st.session_state.gem_registry
 
         if not reg:
-            st.warning("No S.No entries detected in this PDF.")
-
+            st.warning("No S.No entries detected.")
         else:
-            # ── Select ────────────────────────────────────────────────────────
             st.markdown('<div class="divl"></div>', unsafe_allow_html=True)
             st.markdown(f"""
             <div class="hrow">
@@ -428,7 +413,6 @@ with col_right:
             st.session_state.selected_snos = selected
 
             if selected:
-                # ── Preview ───────────────────────────────────────────────────
                 st.markdown('<div class="divl"></div>', unsafe_allow_html=True)
                 st.markdown(f"""
                 <div class="hrow">
@@ -437,13 +421,12 @@ with col_right:
                 </div>""", unsafe_allow_html=True)
 
                 for pair in [selected[i:i+2] for i in range(0, len(selected), 2)]:
-                    imgs = st.columns(len(pair), gap="small")
-                    for col, sno in zip(imgs, pair):
+                    img_cols = st.columns(len(pair), gap="small")
+                    for col, sno in zip(img_cols, pair):
                         with col:
                             st.image(reg[sno], caption=f"S.No {sno}",
                                      use_container_width=True)
 
-                # ── Export ────────────────────────────────────────────────────
                 st.markdown('<div class="divl"></div>', unsafe_allow_html=True)
                 st.markdown(
                     f'<span class="lbl">Export</span>'
@@ -454,7 +437,7 @@ with col_right:
                 )
 
                 if st.button("📄 Generate Selection PDF", use_container_width=True):
-                    with st.spinner("Building PDF…"):
+                    with st.spinner(""):
                         out = fitz.open()
                         for sno in selected:
                             pg = out.new_page(width=595, height=842)
