@@ -22,7 +22,6 @@ html, body,
     font-family: 'Inter', sans-serif !important;
     background: #E4E6ED !important;
 }
-
 #MainMenu, footer, header,
 [data-testid="stDecoration"],
 [data-testid="stToolbar"],
@@ -33,56 +32,74 @@ html, body,
     padding: 52px 20px 60px !important;
 }
 
-/* ── OUTER CARD: only the TOP-LEVEL columns row ── */
-div.block-container > div > div > div > [data-testid="stHorizontalBlock"] {
+/* ════════════════════════════════════════════════
+   CARD: the outermost columns row only
+   We use a wrapper class set on the container
+   ════════════════════════════════════════════════ */
+.card-row [data-testid="stHorizontalBlock"] {
     border-radius: 16px !important;
     overflow: hidden !important;
-    box-shadow: 0 4px 32px rgba(0,0,0,0.14) !important;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.15) !important;
     gap: 0 !important;
     align-items: stretch !important;
 }
 
-/* ── LEFT col (sidebar) — only the direct first child of top-level row ── */
-div.block-container > div > div > div > [data-testid="stHorizontalBlock"]
+/* LEFT col — DARK sidebar */
+.card-row [data-testid="stHorizontalBlock"]
   > [data-testid="stColumn"]:first-child {
     background: #151C2C !important;
     min-width: 200px !important;
     max-width: 200px !important;
-    padding: 36px 22px !important;
     flex-shrink: 0 !important;
 }
-div.block-container > div > div > div > [data-testid="stHorizontalBlock"]
+.card-row [data-testid="stHorizontalBlock"]
   > [data-testid="stColumn"]:first-child > div {
-    padding: 0 !important;
+    padding: 36px 22px !important;
     gap: 0 !important;
 }
 
-/* ── RIGHT col (content) — only the direct last child of top-level row ── */
-div.block-container > div > div > div > [data-testid="stHorizontalBlock"]
+/* RIGHT col — WHITE content */
+.card-row [data-testid="stHorizontalBlock"]
   > [data-testid="stColumn"]:last-child {
     background: #ffffff !important;
-    padding: 36px 36px 32px !important;
     flex: 1 !important;
 }
-div.block-container > div > div > div > [data-testid="stHorizontalBlock"]
+.card-row [data-testid="stHorizontalBlock"]
   > [data-testid="stColumn"]:last-child > div {
-    padding: 0 !important;
+    padding: 36px 36px 32px !important;
     gap: 0 !important;
 }
 
-/* ── ALL nested columns inside right panel = white, no bg override ── */
-div.block-container > div > div > div > [data-testid="stHorizontalBlock"]
-  > [data-testid="stColumn"]:last-child [data-testid="stColumn"] {
+/* Fix: all nested columns inside right panel = transparent */
+.card-row [data-testid="stHorizontalBlock"]
+  > [data-testid="stColumn"]:last-child
+  [data-testid="stHorizontalBlock"] {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
     background: transparent !important;
+}
+.card-row [data-testid="stHorizontalBlock"]
+  > [data-testid="stColumn"]:last-child
+  [data-testid="stColumn"] {
+    background: transparent !important;
+    padding: 0 !important;
+    min-width: unset !important;
+    max-width: unset !important;
+    flex-shrink: 1 !important;
+}
+.card-row [data-testid="stHorizontalBlock"]
+  > [data-testid="stColumn"]:last-child
+  [data-testid="stColumn"] > div {
     padding: 0 4px !important;
 }
 
-/* Remove default streamlit gaps */
+/* Remove streamlit default gaps */
 [data-testid="stVerticalBlock"] { gap: 0 !important; }
 .stMarkdown { margin: 0 !important; }
 div[data-testid="stVerticalBlockBorderWrapper"] { padding: 0 !important; }
 
-/* ── Sidebar elements ── */
+/* ── Sidebar ── */
 .sb-brand {
     font-size: 9px; font-weight: 700; letter-spacing: .18em;
     color: #3A506B; text-transform: uppercase;
@@ -106,135 +123,81 @@ div[data-testid="stVerticalBlockBorderWrapper"] { padding: 0 !important; }
       background:transparent;border:2px solid #3B82F6; }
 .dp { width:18px;height:18px;border-radius:50%;flex-shrink:0;
       background:#1C2B40;border:2px solid #263A55; }
-.la { font-size: 12px; font-weight: 600; color: #fff; }
-.ld { font-size: 12px; font-weight: 500; color: #4B7BCA; }
-.lp { font-size: 12px; font-weight: 400; color: #324560; }
+.la { font-size:12px;font-weight:600;color:#fff; }
+.ld { font-size:12px;font-weight:500;color:#4B7BCA; }
+.lp { font-size:12px;font-weight:400;color:#324560; }
 
-/* ── Right panel typography ── */
-.ey {
-    font-size: 9px; font-weight: 700; letter-spacing: .16em;
-    color: #3B82F6; text-transform: uppercase;
-    margin-bottom: 5px; display: block;
-}
-.pt {
-    font-size: 19px; font-weight: 700; color: #0F172A;
-    letter-spacing: -.02em; margin-bottom: 4px; display: block;
-}
-.ps {
-    font-size: 12px; color: #94A3B8;
-    margin-bottom: 20px; display: block;
-}
-.lbl {
-    font-size: 9px; font-weight: 700; letter-spacing: .12em;
-    color: #B0BCCC; text-transform: uppercase;
-    margin-bottom: 7px; display: block;
-}
-.divl { height: 1px; background: #F1F5F9; margin: 16px 0; }
-.hrow {
-    display: flex; justify-content: space-between;
-    align-items: center; margin-bottom: 9px;
-}
-.pill {
-    display: inline-flex; align-items: center; gap: 4px;
-    background: #EFF6FF; color: #1D4ED8;
-    font-size: 10px; font-weight: 600;
-    padding: 3px 9px; border-radius: 999px;
-}
+/* ── Right panel text ── */
+.ey { font-size:9px;font-weight:700;letter-spacing:.16em;
+      color:#3B82F6;text-transform:uppercase;margin-bottom:5px;display:block; }
+.pt { font-size:19px;font-weight:700;color:#0F172A;
+      letter-spacing:-.02em;margin-bottom:4px;display:block; }
+.ps { font-size:12px;color:#94A3B8;margin-bottom:20px;display:block; }
+.lbl { font-size:9px;font-weight:700;letter-spacing:.12em;
+       color:#B0BCCC;text-transform:uppercase;margin-bottom:7px;display:block; }
+.divl { height:1px;background:#F1F5F9;margin:16px 0; }
+.hrow { display:flex;justify-content:space-between;align-items:center;margin-bottom:9px; }
+.pill { display:inline-flex;align-items:center;gap:4px;
+        background:#EFF6FF;color:#1D4ED8;
+        font-size:10px;font-weight:600;padding:3px 9px;border-radius:999px; }
 
 /* ── Scan animation ── */
-.scan-msg {
-    font-size: 12px; color: #64748B;
-    display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
-}
-.scan-dot {
-    width: 7px; height: 7px; border-radius: 50%;
-    background: #3B82F6; flex-shrink: 0;
-    animation: sdot 1.1s ease-in-out infinite;
-}
-@keyframes sdot {
-    0%,100% { opacity:1; transform:scale(1); }
-    50%      { opacity:.3; transform:scale(.65); }
-}
-.prog-track { height: 5px; background: #F1F5F9; border-radius: 999px; overflow: hidden; }
-.prog-bar {
-    height: 5px;
-    background: linear-gradient(90deg, #3B82F6, #818CF8);
-    border-radius: 999px;
-    animation: pbar 1.8s ease-in-out infinite;
-    width: 45%;
-}
-@keyframes pbar {
-    0%   { transform: translateX(-110%); }
-    100% { transform: translateX(280%); }
-}
-.pg-count { font-size: 11px; color: #94A3B8; margin-top: 5px; }
+.scan-msg { font-size:12px;color:#64748B;
+            display:flex;align-items:center;gap:8px;margin-bottom:8px; }
+.scan-dot { width:7px;height:7px;border-radius:50%;background:#3B82F6;
+            flex-shrink:0;animation:sdot 1.1s ease-in-out infinite; }
+@keyframes sdot { 0%,100%{opacity:1;transform:scale(1);}
+                   50%{opacity:.3;transform:scale(.65);} }
+.prog-track { height:5px;background:#F1F5F9;border-radius:999px;overflow:hidden; }
+.prog-bar { height:5px;background:linear-gradient(90deg,#3B82F6,#818CF8);
+            border-radius:999px;animation:pbar 1.8s ease-in-out infinite;width:45%; }
+@keyframes pbar { 0%{transform:translateX(-110%);} 100%{transform:translateX(280%);} }
+.pg-count { font-size:11px;color:#94A3B8;margin-top:5px; }
 
-/* ── File uploader ── */
+/* ── Widgets ── */
 [data-testid="stFileUploader"] {
-    border: 1.5px solid #E2E8F0 !important;
-    border-radius: 9px !important;
-    background: #FAFBFC !important;
-    padding: 2px 8px !important;
-    margin-bottom: 10px !important;
+    border:1.5px solid #E2E8F0 !important;border-radius:9px !important;
+    background:#FAFBFC !important;padding:2px 8px !important;margin-bottom:10px !important;
 }
-[data-testid="stFileUploader"] section { padding: 4px 0 !important; }
+[data-testid="stFileUploader"] section { padding:4px 0 !important; }
 
-/* ── Multiselect ── */
 [data-testid="stMultiSelect"] > div > div {
-    border: 1.5px solid #E2E8F0 !important;
-    border-radius: 8px !important;
-    font-size: 13px !important;
-    min-height: 40px !important;
-    background: #FAFBFC !important;
+    border:1.5px solid #E2E8F0 !important;border-radius:8px !important;
+    font-size:13px !important;min-height:40px !important;background:#FAFBFC !important;
 }
 [data-testid="stMultiSelect"] > div > div:focus-within {
-    border-color: #3B82F6 !important;
-    box-shadow: 0 0 0 3px rgba(59,130,246,.1) !important;
+    border-color:#3B82F6 !important;box-shadow:0 0 0 3px rgba(59,130,246,.1) !important;
 }
 
-/* ── Primary button ── */
 [data-testid="stButton"] > button {
-    background: #2563EB !important; color: #fff !important;
-    border: none !important; border-radius: 8px !important;
-    font-size: 13px !important; font-weight: 600 !important;
-    height: 40px !important; width: 100% !important;
-    transition: background .15s !important;
+    background:#2563EB !important;color:#fff !important;border:none !important;
+    border-radius:8px !important;font-size:13px !important;font-weight:600 !important;
+    height:40px !important;width:100% !important;transition:background .15s !important;
 }
-[data-testid="stButton"] > button:hover { background: #1D4ED8 !important; }
+[data-testid="stButton"] > button:hover { background:#1D4ED8 !important; }
 
-/* ── Secondary re-scan ── */
 .sec [data-testid="stButton"] > button {
-    background: #F1F5F9 !important;
-    color: #475569 !important;
-    font-size: 12px !important;
+    background:#F1F5F9 !important;color:#475569 !important;font-size:12px !important;
 }
-.sec [data-testid="stButton"] > button:hover { background: #E2E8F0 !important; }
+.sec [data-testid="stButton"] > button:hover { background:#E2E8F0 !important; }
 
-/* ── Download ── */
 [data-testid="stDownloadButton"] > button {
-    background: #059669 !important; color: #fff !important;
-    border: none !important; border-radius: 8px !important;
-    font-size: 13px !important; font-weight: 600 !important;
-    height: 40px !important; width: 100% !important;
+    background:#059669 !important;color:#fff !important;border:none !important;
+    border-radius:8px !important;font-size:13px !important;font-weight:600 !important;
+    height:40px !important;width:100% !important;
 }
-[data-testid="stDownloadButton"] > button:hover { background: #047857 !important; }
+[data-testid="stDownloadButton"] > button:hover { background:#047857 !important; }
 
-/* ── Images ── */
 [data-testid="stImage"] img {
-    border-radius: 8px !important;
-    box-shadow: 0 2px 10px rgba(0,0,0,.10) !important;
-    display: block !important;
+    border-radius:8px !important;box-shadow:0 2px 10px rgba(0,0,0,.1) !important;
+    display:block !important;
 }
-
-/* ── Alert ── */
-[data-testid="stAlert"] { border-radius: 8px !important; font-size: 13px !important; }
-[data-testid="stSpinner"] > div { display: none !important; }
-
-/* ── Image caption ── */
 [data-testid="stImage"] > div > div {
-    font-size: 11px !important; color: #94A3B8 !important;
-    text-align: center !important; margin-top: 5px !important;
+    font-size:11px !important;color:#94A3B8 !important;
+    text-align:center !important;margin-top:5px !important;
 }
+[data-testid="stAlert"] { border-radius:8px !important;font-size:13px !important; }
+[data-testid="stSpinner"] > div { display:none !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -258,10 +221,10 @@ def _remove_border(arr: np.ndarray, dark: int = 40) -> np.ndarray:
     br = np.where((rd > w * frac) & (np.arange(h) > h * .55))[0]
     lc = np.where((cd > h * frac) & (np.arange(w) < w * .45))[0]
     rc = np.where((cd > h * frac) & (np.arange(w) > w * .55))[0]
-    t  = int(tr.max()) + 2 if len(tr) else 0
-    b  = int(br.min())     if len(br) else h
-    l  = int(lc.max()) + 2 if len(lc) else 0
-    r  = int(rc.min())     if len(rc) else w
+    t = int(tr.max()) + 2 if len(tr) else 0
+    b = int(br.min())     if len(br) else h
+    l = int(lc.max()) + 2 if len(lc) else 0
+    r = int(rc.min())     if len(rc) else w
     return arr[t:b, l:r]
 
 
@@ -315,15 +278,16 @@ def make_sidebar():
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# LAYOUT
+# LAYOUT — wrap in .card-row so CSS targets only this columns block
 # ══════════════════════════════════════════════════════════════════════════════
+st.markdown('<div class="card-row">', unsafe_allow_html=True)
+
 col_left, col_right = st.columns([22, 78], gap="small")
 
 with col_left:
     st.markdown(make_sidebar(), unsafe_allow_html=True)
 
 with col_right:
-
     st.markdown("""
     <span class="ey">Catalog Builder</span>
     <span class="pt">Upload your PDF catalog</span>
@@ -456,3 +420,5 @@ with col_right:
                         mime="application/pdf",
                         use_container_width=True,
                     )
+
+st.markdown('</div>', unsafe_allow_html=True)  # close .card-row
