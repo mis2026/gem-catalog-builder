@@ -30,55 +30,60 @@ html, body,
     padding: 60px 24px 80px !important;
 }
 
-/* ─── The card shell ─────────────────────────────────────────
-   We wrap st.columns in a div.gcb-card.
-   Then target only direct stColumn children of the
-   stHorizontalBlock that lives inside .gcb-card.
-───────────────────────────────────────────────── */
-.gcb-card > div > div > div > [data-testid="stHorizontalBlock"] {
+/* ═══════════════════════════════════════════════
+   THE CARD SHELL
+   The outer columns row = our card.
+   Key insight: st.markdown('<div>') goes into a
+   sibling stMarkdown node — it does NOT wrap the
+   columns. So we target the first stHorizontalBlock
+   in the page directly.
+═══════════════════════════════════════════════ */
+
+/* Card appearance on the top-level columns row */
+[data-testid="stMainBlockContainer"]
+  [data-testid="stHorizontalBlock"]:first-of-type {
     border-radius: 14px !important;
     overflow: hidden !important;
-    box-shadow: 0 4px 28px rgba(0,0,0,0.13) !important;
+    box-shadow: 0 4px 28px rgba(0,0,0,0.14) !important;
     gap: 0 !important;
     align-items: stretch !important;
 }
 
-/* LEFT — dark sidebar */
-.gcb-card > div > div > div
-  > [data-testid="stHorizontalBlock"]
+/* ── LEFT column: DARK sidebar ── */
+[data-testid="stMainBlockContainer"]
+  [data-testid="stHorizontalBlock"]:first-of-type
   > [data-testid="stColumn"]:first-child {
     background: #151C2C !important;
     min-width: 220px !important;
     max-width: 220px !important;
     flex-shrink: 0 !important;
 }
-.gcb-card > div > div > div
-  > [data-testid="stHorizontalBlock"]
+[data-testid="stMainBlockContainer"]
+  [data-testid="stHorizontalBlock"]:first-of-type
   > [data-testid="stColumn"]:first-child
   > [data-testid="stVerticalBlock"] {
     padding: 40px 28px !important;
     gap: 0 !important;
 }
 
-/* RIGHT — white content */
-.gcb-card > div > div > div
-  > [data-testid="stHorizontalBlock"]
+/* ── RIGHT column: WHITE content ── */
+[data-testid="stMainBlockContainer"]
+  [data-testid="stHorizontalBlock"]:first-of-type
   > [data-testid="stColumn"]:last-child {
     background: #ffffff !important;
     flex: 1 !important;
-    min-width: 0 !important;
 }
-.gcb-card > div > div > div
-  > [data-testid="stHorizontalBlock"]
+[data-testid="stMainBlockContainer"]
+  [data-testid="stHorizontalBlock"]:first-of-type
   > [data-testid="stColumn"]:last-child
   > [data-testid="stVerticalBlock"] {
     padding: 40px 44px 36px !important;
     gap: 0 !important;
 }
 
-/* ─── Reset ALL nested columns/blocks inside right panel ─── */
-.gcb-card > div > div > div
-  > [data-testid="stHorizontalBlock"]
+/* ── Nested columns inside right panel: reset ── */
+[data-testid="stMainBlockContainer"]
+  [data-testid="stHorizontalBlock"]:first-of-type
   > [data-testid="stColumn"]:last-child
   [data-testid="stHorizontalBlock"] {
     border-radius: 0 !important;
@@ -86,8 +91,8 @@ html, body,
     overflow: visible !important;
     gap: 8px !important;
 }
-.gcb-card > div > div > div
-  > [data-testid="stHorizontalBlock"]
+[data-testid="stMainBlockContainer"]
+  [data-testid="stHorizontalBlock"]:first-of-type
   > [data-testid="stColumn"]:last-child
   [data-testid="stColumn"] {
     background: transparent !important;
@@ -95,158 +100,105 @@ html, body,
     max-width: unset !important;
     flex-shrink: 1 !important;
 }
-.gcb-card > div > div > div
-  > [data-testid="stHorizontalBlock"]
+[data-testid="stMainBlockContainer"]
+  [data-testid="stHorizontalBlock"]:first-of-type
   > [data-testid="stColumn"]:last-child
   [data-testid="stColumn"]
   > [data-testid="stVerticalBlock"] {
     padding: 0 !important;
 }
 
-/* ─── Global resets ─── */
-[data-testid="stVerticalBlock"] { gap: 0 !important; }
-.stMarkdown { margin-bottom: 0 !important; }
-
-/* ─── Sidebar text ─── */
+/* ── Sidebar text ── */
 .sb-brand {
-    font-size: 10px; font-weight: 700; letter-spacing: .2em;
-    color: #3E5270; text-transform: uppercase;
-    margin-bottom: 20px; display: block;
+    font-size:10px;font-weight:700;letter-spacing:.2em;
+    color:#3E5270;text-transform:uppercase;
+    margin-bottom:20px;display:block;
 }
 .sb-title {
-    font-size: 18px; font-weight: 700; color: #fff;
-    line-height: 1.3; margin-bottom: 36px; display: block;
+    font-size:18px;font-weight:700;color:#fff;
+    line-height:1.3;margin-bottom:36px;display:block;
 }
 .step {
-    display: flex; align-items: center; gap: 12px;
-    padding: 10px 0; position: relative;
+    display:flex;align-items:center;gap:12px;
+    padding:10px 0;position:relative;
 }
 .step:not(:last-child)::after {
-    content: ''; position: absolute; left: 9px; top: 34px;
-    width: 2px; height: 20px; background: #1E2D45;
+    content:'';position:absolute;left:9px;top:34px;
+    width:2px;height:20px;background:#1E2D45;
 }
-.d-a { width:20px;height:20px;border-radius:50%;flex-shrink:0;
-        background:#3B82F6;box-shadow:0 0 0 4px rgba(59,130,246,.2); }
-.d-d { width:20px;height:20px;border-radius:50%;flex-shrink:0;
-        background:transparent;border:2px solid #3B82F6; }
-.d-p { width:20px;height:20px;border-radius:50%;flex-shrink:0;
-        background:#1C2B40;border:2px solid #26394F; }
-.l-a { font-size:13px;font-weight:600;color:#fff; }
-.l-d { font-size:13px;font-weight:500;color:#4B7BCA; }
-.l-p { font-size:13px;font-weight:400;color:#334E6A; }
+.d-a{width:20px;height:20px;border-radius:50%;flex-shrink:0;
+     background:#3B82F6;box-shadow:0 0 0 4px rgba(59,130,246,.2);}
+.d-d{width:20px;height:20px;border-radius:50%;flex-shrink:0;
+     background:transparent;border:2px solid #3B82F6;}
+.d-p{width:20px;height:20px;border-radius:50%;flex-shrink:0;
+     background:#1C2B40;border:2px solid #26394F;}
+.l-a{font-size:13px;font-weight:600;color:#fff;}
+.l-d{font-size:13px;font-weight:500;color:#4B7BCA;}
+.l-p{font-size:13px;font-weight:400;color:#334E6A;}
 
-/* ─── Right panel typography ─── */
-.rp-eye {
-    font-size:10px;font-weight:700;letter-spacing:.16em;
-    color:#3B82F6;text-transform:uppercase;
-    display:block;margin-bottom:6px;
-}
-.rp-title {
-    font-size:22px;font-weight:700;color:#0F172A;
-    letter-spacing:-.02em;display:block;margin-bottom:4px;
-}
-.rp-sub {
-    font-size:13px;color:#94A3B8;
-    display:block;margin-bottom:24px;
-}
-.rp-label {
-    font-size:10px;font-weight:700;letter-spacing:.12em;
-    color:#B8C5D4;text-transform:uppercase;
-    display:block;margin-bottom:8px;
-}
-.rp-divider { height:1px;background:#F1F5F9;margin:20px 0; }
-.rp-row {
-    display:flex;justify-content:space-between;
-    align-items:center;margin-bottom:10px;
-}
-.rp-pill {
-    display:inline-flex;align-items:center;gap:4px;
-    background:#EFF6FF;color:#1D4ED8;
-    font-size:11px;font-weight:600;
-    padding:3px 10px;border-radius:999px;
-}
-.rp-note {
-    font-size:13px;color:#64748B;
-    margin:6px 0 14px;line-height:1.5;
-}
+/* ── Right panel ── */
+.rp-eye{font-size:10px;font-weight:700;letter-spacing:.16em;
+        color:#3B82F6;text-transform:uppercase;display:block;margin-bottom:6px;}
+.rp-title{font-size:22px;font-weight:700;color:#0F172A;
+          letter-spacing:-.02em;display:block;margin-bottom:4px;}
+.rp-sub{font-size:13px;color:#94A3B8;display:block;margin-bottom:24px;}
+.rp-label{font-size:10px;font-weight:700;letter-spacing:.12em;
+          color:#B8C5D4;text-transform:uppercase;display:block;margin-bottom:8px;}
+.rp-divider{height:1px;background:#F1F5F9;margin:20px 0;}
+.rp-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.rp-pill{display:inline-flex;align-items:center;gap:4px;background:#EFF6FF;
+         color:#1D4ED8;font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px;}
+.rp-note{font-size:13px;color:#64748B;margin:6px 0 14px;line-height:1.5;}
 
-/* ─── Progress ─── */
-.scan-row {
-    display:flex;align-items:center;gap:8px;
-    font-size:13px;color:#475569;margin-bottom:8px;
-}
-.scan-dot {
-    width:7px;height:7px;border-radius:50%;
-    background:#3B82F6;flex-shrink:0;
-    animation:sdot 1s ease-in-out infinite;
-}
+/* ── Scan animation ── */
+.scan-row{display:flex;align-items:center;gap:8px;
+          font-size:13px;color:#475569;margin-bottom:8px;}
+.scan-dot{width:7px;height:7px;border-radius:50%;background:#3B82F6;
+          flex-shrink:0;animation:sdot 1s ease-in-out infinite;}
 @keyframes sdot{0%,100%{opacity:1}50%{opacity:.2}}
 .prog-track{height:4px;background:#EEF2FF;border-radius:999px;overflow:hidden;}
-.prog-bar{
-    height:4px;width:45%;border-radius:999px;
-    background:linear-gradient(90deg,#3B82F6,#818CF8);
-    animation:pbar 1.8s ease-in-out infinite;
-}
+.prog-bar{height:4px;width:45%;border-radius:999px;
+          background:linear-gradient(90deg,#3B82F6,#818CF8);
+          animation:pbar 1.8s ease-in-out infinite;}
 @keyframes pbar{0%{transform:translateX(-120%)}100%{transform:translateX(300%)}}
 .pg-count{font-size:11px;color:#94A3B8;margin-top:4px;}
 
-/* ─── Widgets ─── */
+/* ── Widgets ── */
 [data-testid="stFileUploader"]{
-    border:1.5px solid #E2E8F0 !important;
-    border-radius:9px !important;
-    background:#FAFBFC !important;
-    padding:2px 10px !important;
-    margin-bottom:12px !important;
+    border:1.5px solid #E2E8F0 !important;border-radius:9px !important;
+    background:#FAFBFC !important;padding:2px 10px !important;margin-bottom:12px !important;
 }
 [data-testid="stFileUploader"] section{padding:4px 0 !important;}
-
 [data-testid="stMultiSelect"]>div>div{
-    border:1.5px solid #E2E8F0 !important;
-    border-radius:8px !important;
-    font-size:13px !important;
-    min-height:42px !important;
-    background:#FAFBFC !important;
+    border:1.5px solid #E2E8F0 !important;border-radius:8px !important;
+    font-size:13px !important;min-height:42px !important;background:#FAFBFC !important;
 }
 [data-testid="stMultiSelect"]>div>div:focus-within{
-    border-color:#3B82F6 !important;
-    box-shadow:0 0 0 3px rgba(59,130,246,.1) !important;
+    border-color:#3B82F6 !important;box-shadow:0 0 0 3px rgba(59,130,246,.1) !important;
 }
-
 [data-testid="stButton"]>button{
-    background:#2563EB !important;color:#fff !important;
-    border:none !important;border-radius:8px !important;
-    font-size:13px !important;font-weight:600 !important;
-    height:42px !important;width:100% !important;
-    transition:background .15s !important;
-    letter-spacing:.01em !important;
+    background:#2563EB !important;color:#fff !important;border:none !important;
+    border-radius:8px !important;font-size:13px !important;font-weight:600 !important;
+    height:42px !important;width:100% !important;transition:background .15s !important;
 }
 [data-testid="stButton"]>button:hover{background:#1D4ED8 !important;}
-
 .btn-sec [data-testid="stButton"]>button{
-    background:#F1F5F9 !important;
-    color:#475569 !important;
-    font-size:12px !important;
+    background:#F1F5F9 !important;color:#475569 !important;font-size:12px !important;
 }
 .btn-sec [data-testid="stButton"]>button:hover{background:#E2E8F0 !important;}
-
 [data-testid="stDownloadButton"]>button{
-    background:#059669 !important;color:#fff !important;
-    border:none !important;border-radius:8px !important;
-    font-size:13px !important;font-weight:600 !important;
+    background:#059669 !important;color:#fff !important;border:none !important;
+    border-radius:8px !important;font-size:13px !important;font-weight:600 !important;
     height:42px !important;width:100% !important;
 }
 [data-testid="stDownloadButton"]>button:hover{background:#047857 !important;}
-
-[data-testid="stImage"] img{
-    border-radius:8px !important;
-    box-shadow:0 2px 12px rgba(0,0,0,.09) !important;
-}
-[data-testid="stImage"]>div>div{
-    font-size:11px !important;color:#94A3B8 !important;
-    text-align:center !important;margin-top:5px !important;
-}
+[data-testid="stImage"] img{border-radius:8px !important;box-shadow:0 2px 12px rgba(0,0,0,.09) !important;}
+[data-testid="stImage"]>div>div{font-size:11px !important;color:#94A3B8 !important;
+    text-align:center !important;margin-top:5px !important;}
 [data-testid="stAlert"]{border-radius:8px !important;font-size:13px !important;}
 [data-testid="stSpinner"]>div{display:none !important;}
+[data-testid="stVerticalBlock"]{gap:0 !important;}
+.stMarkdown{margin-bottom:0 !important;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -263,8 +215,8 @@ if "selected_snos" not in st.session_state: st.session_state.selected_snos = []
 def _remove_border(arr: np.ndarray, dark: int = 40) -> np.ndarray:
     h, w = arr.shape[:2]
     gray = arr.mean(axis=2)
-    rd   = (gray < dark).sum(axis=1)
-    cd   = (gray < dark).sum(axis=0)
+    rd = (gray < dark).sum(axis=1)
+    cd = (gray < dark).sum(axis=0)
     frac = 0.40
     tr = np.where((rd > w * frac) & (np.arange(h) < h * .45))[0]
     br = np.where((rd > w * frac) & (np.arange(h) > h * .55))[0]
@@ -313,13 +265,11 @@ def ss(i):
 STEPS = ["Upload", "Select S.No", "Preview", "Export PDF"]
 
 def make_sidebar():
-    dc = {"active":"d-a", "done":"d-d", "pending":"d-p"}
-    lc = {"active":"l-a", "done":"l-d", "pending":"l-p"}
+    dc = {"active":"d-a","done":"d-d","pending":"d-p"}
+    lc = {"active":"l-a","done":"l-d","pending":"l-p"}
     rows = "".join(
-        f'<div class="step">'
-        f'<div class="{dc[ss(i)]}"></div>'
-        f'<span class="{lc[ss(i)]}">{lbl}</span>'
-        f'</div>'
+        f'<div class="step"><div class="{dc[ss(i)]}"></div>'
+        f'<span class="{lc[ss(i)]}">{lbl}</span></div>'
         for i, lbl in enumerate(STEPS)
     )
     return (
@@ -332,17 +282,12 @@ def make_sidebar():
 # ═══════════════════════════════════════════════════════
 # LAYOUT
 # ═══════════════════════════════════════════════════════
-st.markdown('<div class="gcb-card">', unsafe_allow_html=True)
-
 col_sb, col_main = st.columns([26, 74], gap="small")
 
-# ── LEFT sidebar (pure HTML, no widgets) ────────────────
 with col_sb:
     st.markdown(make_sidebar(), unsafe_allow_html=True)
 
-# ── RIGHT content (all widgets here) ────────────────────
 with col_main:
-
     st.markdown(
         '<span class="rp-eye">Catalog Builder</span>'
         '<span class="rp-title">Upload your PDF catalog</span>'
@@ -351,9 +296,7 @@ with col_main:
         unsafe_allow_html=True,
     )
 
-    uploaded_file = st.file_uploader(
-        "PDF", type=["pdf"], label_visibility="collapsed"
-    )
+    uploaded_file = st.file_uploader("PDF", type=["pdf"], label_visibility="collapsed")
 
     c1, c2 = st.columns([4, 1], gap="small")
     with c1:
@@ -363,7 +306,6 @@ with col_main:
         rescan_btn = st.button("🔄 Re-scan", use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # ── Scan logic ──────────────────────────────────────
     if uploaded_file:
         file_bytes = uploaded_file.read()
 
@@ -416,7 +358,6 @@ with col_main:
         if not reg:
             st.warning("No S.No entries detected in this PDF.")
         else:
-            # ── Select ────────────────────────────────────
             st.markdown('<div class="rp-divider"></div>', unsafe_allow_html=True)
             st.markdown(
                 f'<div class="rp-row">'
@@ -436,7 +377,6 @@ with col_main:
             st.session_state.selected_snos = selected
 
             if selected:
-                # ── Preview ───────────────────────────────
                 st.markdown('<div class="rp-divider"></div>', unsafe_allow_html=True)
                 st.markdown(
                     f'<div class="rp-row">'
@@ -452,7 +392,6 @@ with col_main:
                             st.image(reg[sno], caption=f"S.No {sno}",
                                      use_container_width=True)
 
-                # ── Export ────────────────────────────────
                 st.markdown('<div class="rp-divider"></div>', unsafe_allow_html=True)
                 st.markdown(
                     f'<span class="rp-label">Export</span>'
@@ -472,7 +411,6 @@ with col_main:
                                             stream=reg[sno])
                         buf = io.BytesIO()
                         out.save(buf); buf.seek(0)
-
                     st.download_button(
                         "⬇️ Download Catalog PDF",
                         data=buf,
@@ -480,5 +418,3 @@ with col_main:
                         mime="application/pdf",
                         use_container_width=True,
                     )
-
-st.markdown('</div>', unsafe_allow_html=True)  # /gcb-card
