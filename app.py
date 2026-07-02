@@ -25,10 +25,9 @@ html, body,
 [data-testid="stToolbar"],
 [data-testid="stSidebar"] { display: none !important; }
 
-/* Full-width, tight padding */
 .block-container {
     max-width: 100% !important;
-    padding: 32px 40px 60px !important;
+    padding: 0 !important;
 }
 
 /* ── Card: the outer columns row ── */
@@ -72,7 +71,6 @@ html, body,
   > [data-testid="stVerticalBlock"] {
     padding: 44px 52px 40px !important;
     gap: 0 !important;
-    max-width: 700px !important;   /* keep content readable, not wall-to-wall */
 }
 
 /* ── Nested columns inside right panel: reset ALL ── */
@@ -183,9 +181,10 @@ html, body,
 }
 [data-testid="stButton"]>button:hover { background:#1D4ED8 !important; }
 
-/* Secondary (Re-scan) */
+/* Secondary (Re-scan) — fixed width, never clips */
 .btn-sec [data-testid="stButton"]>button {
     background:#F1F5F9 !important; color:#475569 !important;
+    width:100px !important; min-width:100px !important;
 }
 .btn-sec [data-testid="stButton"]>button:hover { background:#E2E8F0 !important; }
 
@@ -305,8 +304,7 @@ with col_main:
 
     uploaded_file = st.file_uploader("PDF", type=["pdf"], label_visibility="collapsed")
 
-    # Scan + Re-scan side by side — fixed widths via columns
-    c1, c2 = st.columns([6, 1], gap="small")
+    c1, c2 = st.columns([5, 1], gap="small")
     with c1:
         scan_btn = st.button("Scan Catalog", use_container_width=True)
     with c2:
