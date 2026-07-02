@@ -6,7 +6,7 @@ from PIL import Image
 
 st.set_page_config(
     page_title="Lunawat Gem Catalog",
-    layout="centered",
+    layout="wide",                   # <-- wide so card fills the screen
     initial_sidebar_state="collapsed",
 )
 
@@ -25,48 +25,41 @@ html, body,
 [data-testid="stToolbar"],
 [data-testid="stSidebar"] { display: none !important; }
 
+/* Full-width, tight padding */
 .block-container {
-    max-width: 900px !important;
-    padding: 60px 24px 80px !important;
+    max-width: 100% !important;
+    padding: 32px 40px 60px !important;
 }
 
-/* ═══════════════════════════════════════════════
-   THE CARD SHELL
-   The outer columns row = our card.
-   Key insight: st.markdown('<div>') goes into a
-   sibling stMarkdown node — it does NOT wrap the
-   columns. So we target the first stHorizontalBlock
-   in the page directly.
-═══════════════════════════════════════════════ */
-
-/* Card appearance on the top-level columns row */
+/* ── Card: the outer columns row ── */
 [data-testid="stMainBlockContainer"]
   [data-testid="stHorizontalBlock"]:first-of-type {
     border-radius: 14px !important;
     overflow: hidden !important;
-    box-shadow: 0 4px 28px rgba(0,0,0,0.14) !important;
+    box-shadow: 0 4px 28px rgba(0,0,0,0.13) !important;
     gap: 0 !important;
     align-items: stretch !important;
+    min-height: calc(100vh - 100px) !important;
 }
 
-/* ── LEFT column: DARK sidebar ── */
+/* ── LEFT: dark sidebar ── */
 [data-testid="stMainBlockContainer"]
   [data-testid="stHorizontalBlock"]:first-of-type
   > [data-testid="stColumn"]:first-child {
     background: #151C2C !important;
-    min-width: 220px !important;
-    max-width: 220px !important;
+    min-width: 240px !important;
+    max-width: 240px !important;
     flex-shrink: 0 !important;
 }
 [data-testid="stMainBlockContainer"]
   [data-testid="stHorizontalBlock"]:first-of-type
   > [data-testid="stColumn"]:first-child
   > [data-testid="stVerticalBlock"] {
-    padding: 40px 28px !important;
+    padding: 44px 28px !important;
     gap: 0 !important;
 }
 
-/* ── RIGHT column: WHITE content ── */
+/* ── RIGHT: white content ── */
 [data-testid="stMainBlockContainer"]
   [data-testid="stHorizontalBlock"]:first-of-type
   > [data-testid="stColumn"]:last-child {
@@ -77,11 +70,12 @@ html, body,
   [data-testid="stHorizontalBlock"]:first-of-type
   > [data-testid="stColumn"]:last-child
   > [data-testid="stVerticalBlock"] {
-    padding: 40px 44px 36px !important;
+    padding: 44px 52px 40px !important;
     gap: 0 !important;
+    max-width: 700px !important;   /* keep content readable, not wall-to-wall */
 }
 
-/* ── Nested columns inside right panel: reset ── */
+/* ── Nested columns inside right panel: reset ALL ── */
 [data-testid="stMainBlockContainer"]
   [data-testid="stHorizontalBlock"]:first-of-type
   > [data-testid="stColumn"]:last-child
@@ -89,6 +83,7 @@ html, body,
     border-radius: 0 !important;
     box-shadow: none !important;
     overflow: visible !important;
+    min-height: unset !important;
     gap: 8px !important;
 }
 [data-testid="stMainBlockContainer"]
@@ -106,99 +101,111 @@ html, body,
   [data-testid="stColumn"]
   > [data-testid="stVerticalBlock"] {
     padding: 0 !important;
+    max-width: unset !important;
 }
+
+/* ── Global ── */
+[data-testid="stVerticalBlock"] { gap: 0 !important; }
+.stMarkdown { margin-bottom: 0 !important; }
 
 /* ── Sidebar text ── */
 .sb-brand {
-    font-size:10px;font-weight:700;letter-spacing:.2em;
-    color:#3E5270;text-transform:uppercase;
-    margin-bottom:20px;display:block;
+    font-size:10px; font-weight:700; letter-spacing:.2em;
+    color:#3E5270; text-transform:uppercase;
+    margin-bottom:20px; display:block;
 }
 .sb-title {
-    font-size:18px;font-weight:700;color:#fff;
-    line-height:1.3;margin-bottom:36px;display:block;
+    font-size:20px; font-weight:700; color:#fff;
+    line-height:1.3; margin-bottom:40px; display:block;
 }
-.step {
-    display:flex;align-items:center;gap:12px;
-    padding:10px 0;position:relative;
-}
+.step { display:flex; align-items:center; gap:12px; padding:10px 0; position:relative; }
 .step:not(:last-child)::after {
-    content:'';position:absolute;left:9px;top:34px;
-    width:2px;height:20px;background:#1E2D45;
+    content:''; position:absolute; left:9px; top:34px;
+    width:2px; height:20px; background:#1E2D45;
 }
-.d-a{width:20px;height:20px;border-radius:50%;flex-shrink:0;
-     background:#3B82F6;box-shadow:0 0 0 4px rgba(59,130,246,.2);}
-.d-d{width:20px;height:20px;border-radius:50%;flex-shrink:0;
-     background:transparent;border:2px solid #3B82F6;}
-.d-p{width:20px;height:20px;border-radius:50%;flex-shrink:0;
-     background:#1C2B40;border:2px solid #26394F;}
-.l-a{font-size:13px;font-weight:600;color:#fff;}
-.l-d{font-size:13px;font-weight:500;color:#4B7BCA;}
-.l-p{font-size:13px;font-weight:400;color:#334E6A;}
+.d-a { width:20px;height:20px;border-radius:50%;flex-shrink:0;
+        background:#3B82F6;box-shadow:0 0 0 4px rgba(59,130,246,.2); }
+.d-d { width:20px;height:20px;border-radius:50%;flex-shrink:0;
+        background:transparent;border:2px solid #3B82F6; }
+.d-p { width:20px;height:20px;border-radius:50%;flex-shrink:0;
+        background:#1C2B40;border:2px solid #26394F; }
+.l-a { font-size:13px;font-weight:600;color:#fff; }
+.l-d { font-size:13px;font-weight:500;color:#4B7BCA; }
+.l-p { font-size:13px;font-weight:400;color:#334E6A; }
 
-/* ── Right panel ── */
-.rp-eye{font-size:10px;font-weight:700;letter-spacing:.16em;
-        color:#3B82F6;text-transform:uppercase;display:block;margin-bottom:6px;}
-.rp-title{font-size:22px;font-weight:700;color:#0F172A;
-          letter-spacing:-.02em;display:block;margin-bottom:4px;}
-.rp-sub{font-size:13px;color:#94A3B8;display:block;margin-bottom:24px;}
-.rp-label{font-size:10px;font-weight:700;letter-spacing:.12em;
-          color:#B8C5D4;text-transform:uppercase;display:block;margin-bottom:8px;}
-.rp-divider{height:1px;background:#F1F5F9;margin:20px 0;}
-.rp-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
-.rp-pill{display:inline-flex;align-items:center;gap:4px;background:#EFF6FF;
-         color:#1D4ED8;font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px;}
-.rp-note{font-size:13px;color:#64748B;margin:6px 0 14px;line-height:1.5;}
+/* ── Right panel typography ── */
+.rp-eye   { font-size:10px;font-weight:700;letter-spacing:.16em;color:#3B82F6;
+             text-transform:uppercase;display:block;margin-bottom:6px; }
+.rp-title { font-size:24px;font-weight:700;color:#0F172A;
+             letter-spacing:-.02em;display:block;margin-bottom:4px; }
+.rp-sub   { font-size:13px;color:#94A3B8;display:block;margin-bottom:28px; }
+.rp-label { font-size:10px;font-weight:700;letter-spacing:.12em;color:#B8C5D4;
+             text-transform:uppercase;display:block;margin-bottom:8px; }
+.rp-divider { height:1px;background:#F1F5F9;margin:22px 0; }
+.rp-row   { display:flex;justify-content:space-between;align-items:center;margin-bottom:10px; }
+.rp-pill  { display:inline-flex;align-items:center;gap:4px;background:#EFF6FF;color:#1D4ED8;
+             font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px; }
+.rp-note  { font-size:13px;color:#64748B;margin:6px 0 16px;line-height:1.5; }
 
 /* ── Scan animation ── */
-.scan-row{display:flex;align-items:center;gap:8px;
-          font-size:13px;color:#475569;margin-bottom:8px;}
-.scan-dot{width:7px;height:7px;border-radius:50%;background:#3B82F6;
-          flex-shrink:0;animation:sdot 1s ease-in-out infinite;}
+.scan-row { display:flex;align-items:center;gap:8px;
+             font-size:13px;color:#475569;margin-bottom:8px; }
+.scan-dot { width:7px;height:7px;border-radius:50%;background:#3B82F6;
+             flex-shrink:0;animation:sdot 1s ease-in-out infinite; }
 @keyframes sdot{0%,100%{opacity:1}50%{opacity:.2}}
-.prog-track{height:4px;background:#EEF2FF;border-radius:999px;overflow:hidden;}
-.prog-bar{height:4px;width:45%;border-radius:999px;
-          background:linear-gradient(90deg,#3B82F6,#818CF8);
-          animation:pbar 1.8s ease-in-out infinite;}
+.prog-track { height:4px;background:#EEF2FF;border-radius:999px;overflow:hidden; }
+.prog-bar   { height:4px;width:45%;border-radius:999px;
+               background:linear-gradient(90deg,#3B82F6,#818CF8);
+               animation:pbar 1.8s ease-in-out infinite; }
 @keyframes pbar{0%{transform:translateX(-120%)}100%{transform:translateX(300%)}}
-.pg-count{font-size:11px;color:#94A3B8;margin-top:4px;}
+.pg-count { font-size:11px;color:#94A3B8;margin-top:4px; }
 
 /* ── Widgets ── */
-[data-testid="stFileUploader"]{
-    border:1.5px solid #E2E8F0 !important;border-radius:9px !important;
-    background:#FAFBFC !important;padding:2px 10px !important;margin-bottom:12px !important;
+[data-testid="stFileUploader"] {
+    border:1.5px solid #E2E8F0 !important; border-radius:9px !important;
+    background:#FAFBFC !important; padding:2px 10px !important; margin-bottom:14px !important;
 }
-[data-testid="stFileUploader"] section{padding:4px 0 !important;}
-[data-testid="stMultiSelect"]>div>div{
-    border:1.5px solid #E2E8F0 !important;border-radius:8px !important;
-    font-size:13px !important;min-height:42px !important;background:#FAFBFC !important;
+[data-testid="stFileUploader"] section { padding:4px 0 !important; }
+
+[data-testid="stMultiSelect"]>div>div {
+    border:1.5px solid #E2E8F0 !important; border-radius:8px !important;
+    font-size:13px !important; min-height:42px !important; background:#FAFBFC !important;
 }
-[data-testid="stMultiSelect"]>div>div:focus-within{
-    border-color:#3B82F6 !important;box-shadow:0 0 0 3px rgba(59,130,246,.1) !important;
+[data-testid="stMultiSelect"]>div>div:focus-within {
+    border-color:#3B82F6 !important; box-shadow:0 0 0 3px rgba(59,130,246,.1) !important;
 }
-[data-testid="stButton"]>button{
-    background:#2563EB !important;color:#fff !important;border:none !important;
-    border-radius:8px !important;font-size:13px !important;font-weight:600 !important;
-    height:42px !important;width:100% !important;transition:background .15s !important;
+
+/* Primary button */
+[data-testid="stButton"]>button {
+    background:#2563EB !important; color:#fff !important; border:none !important;
+    border-radius:8px !important; font-size:13px !important; font-weight:600 !important;
+    height:42px !important; width:100% !important; transition:background .15s !important;
 }
-[data-testid="stButton"]>button:hover{background:#1D4ED8 !important;}
-.btn-sec [data-testid="stButton"]>button{
-    background:#F1F5F9 !important;color:#475569 !important;font-size:12px !important;
+[data-testid="stButton"]>button:hover { background:#1D4ED8 !important; }
+
+/* Secondary (Re-scan) */
+.btn-sec [data-testid="stButton"]>button {
+    background:#F1F5F9 !important; color:#475569 !important;
 }
-.btn-sec [data-testid="stButton"]>button:hover{background:#E2E8F0 !important;}
-[data-testid="stDownloadButton"]>button{
-    background:#059669 !important;color:#fff !important;border:none !important;
-    border-radius:8px !important;font-size:13px !important;font-weight:600 !important;
-    height:42px !important;width:100% !important;
+.btn-sec [data-testid="stButton"]>button:hover { background:#E2E8F0 !important; }
+
+/* Download */
+[data-testid="stDownloadButton"]>button {
+    background:#059669 !important; color:#fff !important; border:none !important;
+    border-radius:8px !important; font-size:13px !important; font-weight:600 !important;
+    height:42px !important; width:100% !important;
 }
-[data-testid="stDownloadButton"]>button:hover{background:#047857 !important;}
-[data-testid="stImage"] img{border-radius:8px !important;box-shadow:0 2px 12px rgba(0,0,0,.09) !important;}
-[data-testid="stImage"]>div>div{font-size:11px !important;color:#94A3B8 !important;
-    text-align:center !important;margin-top:5px !important;}
-[data-testid="stAlert"]{border-radius:8px !important;font-size:13px !important;}
-[data-testid="stSpinner"]>div{display:none !important;}
-[data-testid="stVerticalBlock"]{gap:0 !important;}
-.stMarkdown{margin-bottom:0 !important;}
+[data-testid="stDownloadButton"]>button:hover { background:#047857 !important; }
+
+[data-testid="stImage"] img {
+    border-radius:8px !important; box-shadow:0 2px 12px rgba(0,0,0,.09) !important;
+}
+[data-testid="stImage"]>div>div {
+    font-size:11px !important; color:#94A3B8 !important;
+    text-align:center !important; margin-top:5px !important;
+}
+[data-testid="stAlert"]   { border-radius:8px !important; font-size:13px !important; }
+[data-testid="stSpinner"] > div { display:none !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -215,17 +222,17 @@ if "selected_snos" not in st.session_state: st.session_state.selected_snos = []
 def _remove_border(arr: np.ndarray, dark: int = 40) -> np.ndarray:
     h, w = arr.shape[:2]
     gray = arr.mean(axis=2)
-    rd = (gray < dark).sum(axis=1)
-    cd = (gray < dark).sum(axis=0)
+    rd   = (gray < dark).sum(axis=1)
+    cd   = (gray < dark).sum(axis=0)
     frac = 0.40
-    tr = np.where((rd > w * frac) & (np.arange(h) < h * .45))[0]
-    br = np.where((rd > w * frac) & (np.arange(h) > h * .55))[0]
-    lc = np.where((cd > h * frac) & (np.arange(w) < w * .45))[0]
-    rc = np.where((cd > h * frac) & (np.arange(w) > w * .55))[0]
-    t = int(tr.max()) + 2 if len(tr) else 0
-    b = int(br.min())     if len(br) else h
-    l = int(lc.max()) + 2 if len(lc) else 0
-    r = int(rc.min())     if len(rc) else w
+    tr = np.where((rd > w*frac) & (np.arange(h) < h*.45))[0]
+    br = np.where((rd > w*frac) & (np.arange(h) > h*.55))[0]
+    lc = np.where((cd > h*frac) & (np.arange(w) < w*.45))[0]
+    rc = np.where((cd > h*frac) & (np.arange(w) > w*.55))[0]
+    t = int(tr.max())+2 if len(tr) else 0
+    b = int(br.min())   if len(br) else h
+    l = int(lc.max())+2 if len(lc) else 0
+    r = int(rc.min())   if len(rc) else w
     return arr[t:b, l:r]
 
 
@@ -280,9 +287,9 @@ def make_sidebar():
 
 
 # ═══════════════════════════════════════════════════════
-# LAYOUT
+# LAYOUT  — columns ratio gives ~240px left on wide layout
 # ═══════════════════════════════════════════════════════
-col_sb, col_main = st.columns([26, 74], gap="small")
+col_sb, col_main = st.columns([16, 84], gap="small")
 
 with col_sb:
     st.markdown(make_sidebar(), unsafe_allow_html=True)
@@ -298,12 +305,13 @@ with col_main:
 
     uploaded_file = st.file_uploader("PDF", type=["pdf"], label_visibility="collapsed")
 
-    c1, c2 = st.columns([4, 1], gap="small")
+    # Scan + Re-scan side by side — fixed widths via columns
+    c1, c2 = st.columns([6, 1], gap="small")
     with c1:
         scan_btn = st.button("Scan Catalog", use_container_width=True)
     with c2:
         st.markdown('<div class="btn-sec">', unsafe_allow_html=True)
-        rescan_btn = st.button("🔄 Re-scan", use_container_width=True)
+        rescan_btn = st.button("Re-scan", use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
     if uploaded_file:
