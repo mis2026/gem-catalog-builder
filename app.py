@@ -156,7 +156,7 @@ def _quadrant_rect(page: fitz.Page, bbox) -> fitz.Rect:
 # ══════════════════════════════════════════════════════════════════════════════
 # UI
 # ══════════════════════════════════════════════════════════════════════════════
-st.title("💎 Gem Catalog Builder")
+st.title("Lunawat Gems Catalog Builder")
 st.caption("Upload a catalog PDF, select S.No(s), preview and export.")
 
 st.divider()
