@@ -14,104 +14,246 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
+html, body,
+[data-testid="stAppViewContainer"],
+[data-testid="stMain"] {
     font-family: 'Inter', sans-serif !important;
-    background: #F7F8FA !important;
+    background: #ECEEF3 !important;
 }
 #MainMenu, footer, header,
 [data-testid="stDecoration"],
 [data-testid="stToolbar"],
 [data-testid="stSidebar"] { display: none !important; }
 
-.block-container { max-width: 720px !important; padding: 48px 24px 64px !important; }
-
-/* File uploader */
-[data-testid="stFileUploader"] {
-    border: 1.5px solid #E2E8F0 !important;
-    border-radius: 10px !important;
-    background: #fff !important;
-    padding: 4px 12px !important;
+.block-container {
+    max-width: 900px !important;
+    padding: 60px 24px 80px !important;
 }
 
-/* Multiselect */
-[data-testid="stMultiSelect"] > div > div {
-    border: 1.5px solid #E2E8F0 !important;
-    border-radius: 8px !important;
-    font-size: 14px !important;
-    background: #fff !important;
-}
-[data-testid="stMultiSelect"] > div > div:focus-within {
-    border-color: #3B82F6 !important;
-    box-shadow: 0 0 0 3px rgba(59,130,246,.1) !important;
-}
-
-/* All buttons */
-[data-testid="stButton"] > button {
-    border-radius: 8px !important;
-    font-size: 14px !important;
-    font-weight: 600 !important;
-    height: 42px !important;
-    border: none !important;
-    background: #2563EB !important;
-    color: #fff !important;
-    width: 100% !important;
-    transition: background .15s !important;
-}
-[data-testid="stButton"] > button:hover { background: #1D4ED8 !important; }
-
-/* Secondary button override via wrapper */
-.btn-secondary [data-testid="stButton"] > button {
-    background: #F1F5F9 !important;
-    color: #334155 !important;
-}
-.btn-secondary [data-testid="stButton"] > button:hover {
-    background: #E2E8F0 !important;
+/* ─── The card shell ─────────────────────────────────────────
+   We wrap st.columns in a div.gcb-card.
+   Then target only direct stColumn children of the
+   stHorizontalBlock that lives inside .gcb-card.
+───────────────────────────────────────────────── */
+.gcb-card > div > div > div > [data-testid="stHorizontalBlock"] {
+    border-radius: 14px !important;
+    overflow: hidden !important;
+    box-shadow: 0 4px 28px rgba(0,0,0,0.13) !important;
+    gap: 0 !important;
+    align-items: stretch !important;
 }
 
-/* Download button */
-[data-testid="stDownloadButton"] > button {
-    border-radius: 8px !important;
-    font-size: 14px !important;
-    font-weight: 600 !important;
-    height: 42px !important;
-    border: none !important;
-    background: #059669 !important;
-    color: #fff !important;
-    width: 100% !important;
+/* LEFT — dark sidebar */
+.gcb-card > div > div > div
+  > [data-testid="stHorizontalBlock"]
+  > [data-testid="stColumn"]:first-child {
+    background: #151C2C !important;
+    min-width: 220px !important;
+    max-width: 220px !important;
+    flex-shrink: 0 !important;
 }
-[data-testid="stDownloadButton"] > button:hover { background: #047857 !important; }
-
-/* Images */
-[data-testid="stImage"] img {
-    border-radius: 10px !important;
-    box-shadow: 0 2px 12px rgba(0,0,0,.08) !important;
+.gcb-card > div > div > div
+  > [data-testid="stHorizontalBlock"]
+  > [data-testid="stColumn"]:first-child
+  > [data-testid="stVerticalBlock"] {
+    padding: 40px 28px !important;
+    gap: 0 !important;
 }
 
-/* Alert */
-[data-testid="stAlert"] { border-radius: 8px !important; }
+/* RIGHT — white content */
+.gcb-card > div > div > div
+  > [data-testid="stHorizontalBlock"]
+  > [data-testid="stColumn"]:last-child {
+    background: #ffffff !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+.gcb-card > div > div > div
+  > [data-testid="stHorizontalBlock"]
+  > [data-testid="stColumn"]:last-child
+  > [data-testid="stVerticalBlock"] {
+    padding: 40px 44px 36px !important;
+    gap: 0 !important;
+}
 
-/* Progress text */
-.pg-count { font-size: 12px; color: #94A3B8; margin-top: 4px; }
-.scan-msg { font-size: 13px; color: #475569; margin-bottom: 6px; }
-.prog-track { height: 4px; background: #E2E8F0; border-radius: 999px; overflow: hidden; margin-bottom: 4px; }
-.prog-bar {
-    height: 4px;
-    background: linear-gradient(90deg, #3B82F6, #818CF8);
-    border-radius: 999px;
-    animation: pbar 1.8s ease-in-out infinite;
-    width: 45%;
+/* ─── Reset ALL nested columns/blocks inside right panel ─── */
+.gcb-card > div > div > div
+  > [data-testid="stHorizontalBlock"]
+  > [data-testid="stColumn"]:last-child
+  [data-testid="stHorizontalBlock"] {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    gap: 8px !important;
 }
-@keyframes pbar {
-    0%   { transform: translateX(-120%); }
-    100% { transform: translateX(280%); }
+.gcb-card > div > div > div
+  > [data-testid="stHorizontalBlock"]
+  > [data-testid="stColumn"]:last-child
+  [data-testid="stColumn"] {
+    background: transparent !important;
+    min-width: unset !important;
+    max-width: unset !important;
+    flex-shrink: 1 !important;
 }
+.gcb-card > div > div > div
+  > [data-testid="stHorizontalBlock"]
+  > [data-testid="stColumn"]:last-child
+  [data-testid="stColumn"]
+  > [data-testid="stVerticalBlock"] {
+    padding: 0 !important;
+}
+
+/* ─── Global resets ─── */
+[data-testid="stVerticalBlock"] { gap: 0 !important; }
+.stMarkdown { margin-bottom: 0 !important; }
+
+/* ─── Sidebar text ─── */
+.sb-brand {
+    font-size: 10px; font-weight: 700; letter-spacing: .2em;
+    color: #3E5270; text-transform: uppercase;
+    margin-bottom: 20px; display: block;
+}
+.sb-title {
+    font-size: 18px; font-weight: 700; color: #fff;
+    line-height: 1.3; margin-bottom: 36px; display: block;
+}
+.step {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0; position: relative;
+}
+.step:not(:last-child)::after {
+    content: ''; position: absolute; left: 9px; top: 34px;
+    width: 2px; height: 20px; background: #1E2D45;
+}
+.d-a { width:20px;height:20px;border-radius:50%;flex-shrink:0;
+        background:#3B82F6;box-shadow:0 0 0 4px rgba(59,130,246,.2); }
+.d-d { width:20px;height:20px;border-radius:50%;flex-shrink:0;
+        background:transparent;border:2px solid #3B82F6; }
+.d-p { width:20px;height:20px;border-radius:50%;flex-shrink:0;
+        background:#1C2B40;border:2px solid #26394F; }
+.l-a { font-size:13px;font-weight:600;color:#fff; }
+.l-d { font-size:13px;font-weight:500;color:#4B7BCA; }
+.l-p { font-size:13px;font-weight:400;color:#334E6A; }
+
+/* ─── Right panel typography ─── */
+.rp-eye {
+    font-size:10px;font-weight:700;letter-spacing:.16em;
+    color:#3B82F6;text-transform:uppercase;
+    display:block;margin-bottom:6px;
+}
+.rp-title {
+    font-size:22px;font-weight:700;color:#0F172A;
+    letter-spacing:-.02em;display:block;margin-bottom:4px;
+}
+.rp-sub {
+    font-size:13px;color:#94A3B8;
+    display:block;margin-bottom:24px;
+}
+.rp-label {
+    font-size:10px;font-weight:700;letter-spacing:.12em;
+    color:#B8C5D4;text-transform:uppercase;
+    display:block;margin-bottom:8px;
+}
+.rp-divider { height:1px;background:#F1F5F9;margin:20px 0; }
+.rp-row {
+    display:flex;justify-content:space-between;
+    align-items:center;margin-bottom:10px;
+}
+.rp-pill {
+    display:inline-flex;align-items:center;gap:4px;
+    background:#EFF6FF;color:#1D4ED8;
+    font-size:11px;font-weight:600;
+    padding:3px 10px;border-radius:999px;
+}
+.rp-note {
+    font-size:13px;color:#64748B;
+    margin:6px 0 14px;line-height:1.5;
+}
+
+/* ─── Progress ─── */
+.scan-row {
+    display:flex;align-items:center;gap:8px;
+    font-size:13px;color:#475569;margin-bottom:8px;
+}
+.scan-dot {
+    width:7px;height:7px;border-radius:50%;
+    background:#3B82F6;flex-shrink:0;
+    animation:sdot 1s ease-in-out infinite;
+}
+@keyframes sdot{0%,100%{opacity:1}50%{opacity:.2}}
+.prog-track{height:4px;background:#EEF2FF;border-radius:999px;overflow:hidden;}
+.prog-bar{
+    height:4px;width:45%;border-radius:999px;
+    background:linear-gradient(90deg,#3B82F6,#818CF8);
+    animation:pbar 1.8s ease-in-out infinite;
+}
+@keyframes pbar{0%{transform:translateX(-120%)}100%{transform:translateX(300%)}}
+.pg-count{font-size:11px;color:#94A3B8;margin-top:4px;}
+
+/* ─── Widgets ─── */
+[data-testid="stFileUploader"]{
+    border:1.5px solid #E2E8F0 !important;
+    border-radius:9px !important;
+    background:#FAFBFC !important;
+    padding:2px 10px !important;
+    margin-bottom:12px !important;
+}
+[data-testid="stFileUploader"] section{padding:4px 0 !important;}
+
+[data-testid="stMultiSelect"]>div>div{
+    border:1.5px solid #E2E8F0 !important;
+    border-radius:8px !important;
+    font-size:13px !important;
+    min-height:42px !important;
+    background:#FAFBFC !important;
+}
+[data-testid="stMultiSelect"]>div>div:focus-within{
+    border-color:#3B82F6 !important;
+    box-shadow:0 0 0 3px rgba(59,130,246,.1) !important;
+}
+
+[data-testid="stButton"]>button{
+    background:#2563EB !important;color:#fff !important;
+    border:none !important;border-radius:8px !important;
+    font-size:13px !important;font-weight:600 !important;
+    height:42px !important;width:100% !important;
+    transition:background .15s !important;
+    letter-spacing:.01em !important;
+}
+[data-testid="stButton"]>button:hover{background:#1D4ED8 !important;}
+
+.btn-sec [data-testid="stButton"]>button{
+    background:#F1F5F9 !important;
+    color:#475569 !important;
+    font-size:12px !important;
+}
+.btn-sec [data-testid="stButton"]>button:hover{background:#E2E8F0 !important;}
+
+[data-testid="stDownloadButton"]>button{
+    background:#059669 !important;color:#fff !important;
+    border:none !important;border-radius:8px !important;
+    font-size:13px !important;font-weight:600 !important;
+    height:42px !important;width:100% !important;
+}
+[data-testid="stDownloadButton"]>button:hover{background:#047857 !important;}
+
+[data-testid="stImage"] img{
+    border-radius:8px !important;
+    box-shadow:0 2px 12px rgba(0,0,0,.09) !important;
+}
+[data-testid="stImage"]>div>div{
+    font-size:11px !important;color:#94A3B8 !important;
+    text-align:center !important;margin-top:5px !important;
+}
+[data-testid="stAlert"]{border-radius:8px !important;font-size:13px !important;}
+[data-testid="stSpinner"]>div{display:none !important;}
 </style>
 """, unsafe_allow_html=True)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# CORE LOGIC — unchanged + border removal
-# ══════════════════════════════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════
+# UNCHANGED CORE LOGIC
+# ═══════════════════════════════════════════════════════
 GRID_X, GRID_Y, RENDER_ZOOM = 360, 277, 2.5
 
 if "gem_registry"  not in st.session_state: st.session_state.gem_registry  = {}
@@ -153,135 +295,190 @@ def _quadrant_rect(page: fitz.Page, bbox) -> fitz.Rect:
     return fitz.Rect(GRID_X, GRID_Y, pw, ph)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# UI
-# ══════════════════════════════════════════════════════════════════════════════
-st.title("Lunawat Gems Catalog Builder")
-st.caption("Upload a catalog PDF, select S.No(s), preview and export.")
+# ═══════════════════════════════════════════════════════
+# STEP STATES
+# ═══════════════════════════════════════════════════════
+reg      = st.session_state.gem_registry
+has_scan = bool(reg)
+has_sel  = bool(st.session_state.selected_snos) and has_scan
 
-st.divider()
+def ss(i):
+    if i == 0: return "done"   if has_scan  else "active"
+    if i == 1:
+        if has_sel:  return "done"
+        if has_scan: return "active"
+        return "pending"
+    return "active" if has_sel else "pending"
 
-# ── Upload ────────────────────────────────────────────────────────────────────
-uploaded_file = st.file_uploader("Upload catalog PDF", type=["pdf"],
-                                 label_visibility="collapsed")
+STEPS = ["Upload", "Select S.No", "Preview", "Export PDF"]
 
-c1, c2 = st.columns([4, 1], gap="small")
-with c1:
-    scan_btn = st.button("Scan Catalog", use_container_width=True)
-with c2:
-    st.markdown('<div class="btn-secondary">', unsafe_allow_html=True)
-    rescan_btn = st.button("Re-scan", use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+def make_sidebar():
+    dc = {"active":"d-a", "done":"d-d", "pending":"d-p"}
+    lc = {"active":"l-a", "done":"l-d", "pending":"l-p"}
+    rows = "".join(
+        f'<div class="step">'
+        f'<div class="{dc[ss(i)]}"></div>'
+        f'<span class="{lc[ss(i)]}">{lbl}</span>'
+        f'</div>'
+        for i, lbl in enumerate(STEPS)
+    )
+    return (
+        f'<span class="sb-brand">Lunawat Gems</span>'
+        f'<span class="sb-title">Gem Catalog<br>Builder</span>'
+        f'{rows}'
+    )
 
-# ── Scan ──────────────────────────────────────────────────────────────────────
-if uploaded_file:
-    file_bytes = uploaded_file.read()
 
-    if rescan_btn:
-        st.session_state.gem_registry  = {}
-        st.session_state.selected_snos = []
-        st.rerun()
+# ═══════════════════════════════════════════════════════
+# LAYOUT
+# ═══════════════════════════════════════════════════════
+st.markdown('<div class="gcb-card">', unsafe_allow_html=True)
 
-    needs_scan = (scan_btn or not st.session_state.gem_registry) and bool(file_bytes)
+col_sb, col_main = st.columns([26, 74], gap="small")
 
-    if needs_scan:
-        st.markdown('<p class="scan-msg">Scanning pages…</p>', unsafe_allow_html=True)
-        st.markdown('<div class="prog-track"><div class="prog-bar"></div></div>',
-                    unsafe_allow_html=True)
-        counter = st.empty()
+# ── LEFT sidebar (pure HTML, no widgets) ────────────────
+with col_sb:
+    st.markdown(make_sidebar(), unsafe_allow_html=True)
 
-        doc      = fitz.open(stream=file_bytes, filetype="pdf")
-        total    = len(doc)
-        registry = {}
+# ── RIGHT content (all widgets here) ────────────────────
+with col_main:
 
-        for pn in range(total):
-            counter.markdown(
-                f'<div class="pg-count">Page {pn+1} / {total}</div>',
+    st.markdown(
+        '<span class="rp-eye">Catalog Builder</span>'
+        '<span class="rp-title">Upload your PDF catalog</span>'
+        '<span class="rp-sub">Supports single-item and multi-item (4-up) layouts.</span>'
+        '<span class="rp-label">Catalog File</span>',
+        unsafe_allow_html=True,
+    )
+
+    uploaded_file = st.file_uploader(
+        "PDF", type=["pdf"], label_visibility="collapsed"
+    )
+
+    c1, c2 = st.columns([4, 1], gap="small")
+    with c1:
+        scan_btn = st.button("Scan Catalog", use_container_width=True)
+    with c2:
+        st.markdown('<div class="btn-sec">', unsafe_allow_html=True)
+        rescan_btn = st.button("🔄 Re-scan", use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # ── Scan logic ──────────────────────────────────────
+    if uploaded_file:
+        file_bytes = uploaded_file.read()
+
+        if rescan_btn:
+            st.session_state.gem_registry  = {}
+            st.session_state.selected_snos = []
+            st.rerun()
+
+        needs_scan = (scan_btn or not st.session_state.gem_registry) and bool(file_bytes)
+
+        if needs_scan:
+            st.markdown('<div class="rp-divider"></div>', unsafe_allow_html=True)
+            st.markdown(
+                '<div class="scan-row"><div class="scan-dot"></div>'
+                'Scanning pages and removing borders…</div>'
+                '<div class="prog-track"><div class="prog-bar"></div></div>',
                 unsafe_allow_html=True,
             )
-            page  = doc[pn]
-            lines = []
-            for block in page.get_text("dict")["blocks"]:
-                if block["type"] != 0: continue
-                for line in block["lines"]:
-                    txt = "".join(s["text"] for s in line["spans"])
-                    m   = re.search(r'S\.No[-\s]*(\d+)', txt, re.IGNORECASE)
-                    if m: lines.append((m.group(1), line["bbox"]))
-            if not lines: continue
-            multi = len(lines) > 1
-            for sno, bbox in lines:
-                rect          = _quadrant_rect(page, bbox) if multi else page.rect
-                registry[sno] = _render_clean(page, rect)
+            counter  = st.empty()
+            doc      = fitz.open(stream=file_bytes, filetype="pdf")
+            total    = len(doc)
+            registry = {}
 
-        doc.close()
-        counter.empty()
-        st.session_state.gem_registry = registry
-        st.rerun()
-
-    reg = st.session_state.gem_registry
-
-    if not reg:
-        st.warning("No S.No entries detected in this PDF.")
-    else:
-        st.divider()
-
-        # ── Select ────────────────────────────────────────────────────────────
-        col_a, col_b = st.columns([1, 1])
-        with col_a:
-            st.markdown(f"**Select S.No** &nbsp; `{len(reg)} entries found`",
-                        unsafe_allow_html=True)
-
-        selected = st.multiselect(
-            "Select",
-            options=sorted(reg.keys()),
-            default=[s for s in st.session_state.selected_snos if s in reg],
-            format_func=lambda x: f"S.No {x}",
-            placeholder="Type to search or click to select…",
-            label_visibility="collapsed",
-        )
-        st.session_state.selected_snos = selected
-
-        if selected:
-            st.divider()
-
-            # ── Preview ───────────────────────────────────────────────────────
-            st.markdown(f"**Preview** &nbsp; `{len(selected)} selected`",
-                        unsafe_allow_html=True)
-            st.write("")
-
-            for pair in [selected[i:i+2] for i in range(0, len(selected), 2)]:
-                cols = st.columns(len(pair), gap="medium")
-                for col, sno in zip(cols, pair):
-                    with col:
-                        st.image(reg[sno], caption=f"S.No {sno}",
-                                 use_container_width=True)
-
-            st.divider()
-
-            # ── Export ────────────────────────────────────────────────────────
-            st.markdown(
-                f"**Export PDF** — {len(selected)} "
-                f"entr{'y' if len(selected)==1 else 'ies'}, one per page.",
-            )
-            st.write("")
-
-            if st.button("📄 Generate Selection PDF", use_container_width=True):
-                with st.spinner("Building PDF…"):
-                    out = fitz.open()
-                    for sno in selected:
-                        pg = out.new_page(width=595, height=842)
-                        pg.insert_text(fitz.Point(40, 45),
-                                       f"Lunawat Gems — S.No {sno}",
-                                       fontsize=14, color=(0, 0, 0))
-                        pg.insert_image(fitz.Rect(40, 65, 555, 780),
-                                        stream=reg[sno])
-                    buf = io.BytesIO()
-                    out.save(buf); buf.seek(0)
-
-                st.download_button(
-                    "⬇️ Download Catalog PDF",
-                    data=buf,
-                    file_name="LGC_Selection_Catalog.pdf",
-                    mime="application/pdf",
-                    use_container_width=True,
+            for pn in range(total):
+                counter.markdown(
+                    f'<div class="pg-count">Page {pn+1} of {total}</div>',
+                    unsafe_allow_html=True,
                 )
+                page  = doc[pn]
+                lines = []
+                for block in page.get_text("dict")["blocks"]:
+                    if block["type"] != 0: continue
+                    for line in block["lines"]:
+                        txt = "".join(s["text"] for s in line["spans"])
+                        m   = re.search(r'S\.No[-\s]*(\d+)', txt, re.IGNORECASE)
+                        if m: lines.append((m.group(1), line["bbox"]))
+                if not lines: continue
+                multi = len(lines) > 1
+                for sno, bbox in lines:
+                    rect          = _quadrant_rect(page, bbox) if multi else page.rect
+                    registry[sno] = _render_clean(page, rect)
+
+            doc.close()
+            counter.empty()
+            st.session_state.gem_registry = registry
+            st.rerun()
+
+        reg = st.session_state.gem_registry
+
+        if not reg:
+            st.warning("No S.No entries detected in this PDF.")
+        else:
+            # ── Select ────────────────────────────────────
+            st.markdown('<div class="rp-divider"></div>', unsafe_allow_html=True)
+            st.markdown(
+                f'<div class="rp-row">'
+                f'<span class="rp-label" style="margin-bottom:0">Select Serial Numbers</span>'
+                f'<span class="rp-pill">💎 {len(reg)} entries found</span>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+            selected = st.multiselect(
+                "s",
+                options=sorted(reg.keys()),
+                default=[s for s in st.session_state.selected_snos if s in reg],
+                format_func=lambda x: f"S.No {x}",
+                placeholder="Type to search or click to select…",
+                label_visibility="collapsed",
+            )
+            st.session_state.selected_snos = selected
+
+            if selected:
+                # ── Preview ───────────────────────────────
+                st.markdown('<div class="rp-divider"></div>', unsafe_allow_html=True)
+                st.markdown(
+                    f'<div class="rp-row">'
+                    f'<span class="rp-label" style="margin-bottom:0">Preview</span>'
+                    f'<span class="rp-pill">{len(selected)} selected</span>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
+                for pair in [selected[i:i+2] for i in range(0, len(selected), 2)]:
+                    img_cols = st.columns(len(pair), gap="small")
+                    for col, sno in zip(img_cols, pair):
+                        with col:
+                            st.image(reg[sno], caption=f"S.No {sno}",
+                                     use_container_width=True)
+
+                # ── Export ────────────────────────────────
+                st.markdown('<div class="rp-divider"></div>', unsafe_allow_html=True)
+                st.markdown(
+                    f'<span class="rp-label">Export</span>'
+                    f'<p class="rp-note">Generate a PDF with <strong>{len(selected)}</strong> '
+                    f'entr{"y" if len(selected)==1 else "ies"}, one per page.</p>',
+                    unsafe_allow_html=True,
+                )
+                if st.button("📄 Generate Selection PDF", use_container_width=True):
+                    with st.spinner(""):
+                        out = fitz.open()
+                        for sno in selected:
+                            pg = out.new_page(width=595, height=842)
+                            pg.insert_text(fitz.Point(40, 45),
+                                           f"Lunawat Gems — S.No {sno}",
+                                           fontsize=14, color=(0, 0, 0))
+                            pg.insert_image(fitz.Rect(40, 65, 555, 780),
+                                            stream=reg[sno])
+                        buf = io.BytesIO()
+                        out.save(buf); buf.seek(0)
+
+                    st.download_button(
+                        "⬇️ Download Catalog PDF",
+                        data=buf,
+                        file_name="LGC_Selection_Catalog.pdf",
+                        mime="application/pdf",
+                        use_container_width=True,
+                    )
+
+st.markdown('</div>', unsafe_allow_html=True)  # /gcb-card
