@@ -102,12 +102,12 @@ html, body,
 /* Mode toggle buttons */
 .mode-btn {
     display:flex;align-items:center;gap:10px;
-    padding:11px 14px;border-radius:9px;cursor:pointer;
+    padding:11px 14px;border-radius:9px;
     margin-bottom:8px;transition:background .15s;
+    cursor:pointer;user-select:none;
 }
+.mode-btn:hover { background:#1A2A40 !important; }
 .mode-btn.active { background:#1E3A5F; }
-.mode-btn:not(.active) { background:transparent; }
-.mode-btn:not(.active):hover { background:#1A2A40; }
 .mode-icon { font-size:16px;flex-shrink:0; }
 .mode-label { font-size:13px;font-weight:600;color:#fff; }
 .mode-sub   { font-size:11px;color:#4B7BCA;margin-top:1px; }
@@ -349,6 +349,27 @@ with col_sb:
         unsafe_allow_html=True,
     )
 
+# JS: clicking sidebar mode cards switches the Streamlit tab
+st.markdown("""
+<script>
+(function() {
+    function switchTab(index) {
+        // Streamlit tab buttons are <button data-baseweb="tab">
+        const tabs = window.parent.document.querySelectorAll('[data-baseweb="tab"]');
+        if (tabs[index]) tabs[index].click();
+    }
+    // Delegate clicks on .mode-btn inside the sidebar column
+    window.parent.document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.mode-btn');
+        if (!btn) return;
+        const all = window.parent.document.querySelectorAll('.mode-btn');
+        const idx = Array.from(all).indexOf(btn);
+        if (idx >= 0) switchTab(idx);
+    }, true);
+})();
+</script>
+""", unsafe_allow_html=True)
+
 
 # ═══════════════════════════════════════════════════════
 # RIGHT PANEL — mode-switched content
@@ -528,6 +549,16 @@ with col_main:
                             mime="application/pdf",
                             use_container_width=True,
                         )
+                        st.markdown('<div style="margin-top:8px;"></div>', unsafe_allow_html=True)
+                        st.markdown('<div class="btn-sec">', unsafe_allow_html=True)
+                        if st.button("🗑️ Clear All & Start Over", key="clear_extract",
+                                     use_container_width=True):
+                            st.session_state.gem_registry   = {}
+                            st.session_state.selected_snos  = []
+                            st.session_state.cover_page_jpg = None
+                            st.session_state.upload_fname   = ""
+                            st.rerun()
+                        st.markdown('</div>', unsafe_allow_html=True)
 
     # ══════════════════════════════════════════════════
     # TAB 2 — COMBINE IMAGES INTO PDF
@@ -553,10 +584,12 @@ with col_main:
         st.markdown('<div class="rp-divider"></div>', unsafe_allow_html=True)
 
         # ── Step 2: Optional cover page ────────────────
-        st.markdown('<span class="rp-label">Cover Page (Optional)</span>', unsafe_allow_html=True)
-        st.markdown('<p class="rp-note" style="margin-bottom:8px;">'
-                    'Upload a single image to use as the first page of the PDF.</p>',
-                    unsafe_allow_html=True)
+        st.markdown(
+            '<span class="rp-label">Cover Page (Optional)</span>'
+            '<p class="rp-note" style="margin-bottom:10px;">'
+            'Upload a single image — it will be inserted as the very first page.</p>',
+            unsafe_allow_html=True,
+        )
         cover_img = st.file_uploader(
             "Upload cover image",
             type=["png", "jpg", "jpeg", "webp"],
@@ -569,18 +602,18 @@ with col_main:
 
         st.markdown('<div class="rp-divider"></div>', unsafe_allow_html=True)
 
-        # ── Step 3: Catalog name + export ──────────────
-        st.markdown('<span class="rp-label">Catalog Name</span>', unsafe_allow_html=True)
+        # ── Step 3: Catalog name ────────────────────────
+        st.markdown(
+            '<span class="rp-label">Catalog Name</span>'
+            '<p class="rp-note" style="margin-bottom:10px;">'
+            'This name will be the downloaded filename.</p>',
+            unsafe_allow_html=True,
+        )
         comb_catalog_name = st.text_input(
             "Name your catalog PDF",
             placeholder="e.g. Ruby Mozambique Collection 2026",
             key="comb_name",
             label_visibility="collapsed",
-        )
-        st.markdown(
-            '<div class="rp-label" style="margin-top:4px;margin-bottom:16px;">'
-            'This name will be used as the downloaded filename</div>',
-            unsafe_allow_html=True,
         )
 
         if gem_images:
@@ -634,5 +667,11 @@ with col_main:
                     mime="application/pdf",
                     use_container_width=True,
                 )
+                st.markdown('<div style="margin-top:8px;"></div>', unsafe_allow_html=True)
+                st.markdown('<div class="btn-sec">', unsafe_allow_html=True)
+                if st.button("🗑️ Clear All & Start Over", key="clear_combine",
+                             use_container_width=True):
+                    st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
         else:
             st.info("Upload gem images above to get started.")
