@@ -223,7 +223,6 @@ GRID_X, GRID_Y, RENDER_ZOOM = 360, 277, 2.5
 
 # Session state
 for k, v in {
-    "mode":           "extract",   # "extract" | "combine"
     "gem_registry":   {},
     "selected_snos":  [],
     "cover_page_jpg": None,
@@ -272,8 +271,16 @@ def build_pdf(pages_jpg: list[bytes]) -> bytes:
     """Turn a list of JPEG byte strings into a PDF, each image full-bleed A4."""
     out = fitz.open()
     for jpg in pages_jpg:
-        pg = out.new_page(width=595, height=842)
-        pg.insert_image(fitz.Rect(0, 0, 595, 842), stream=jpg)
+        # Match page size to image aspect ratio to avoid any letterboxing.
+        # Decode image dims, then create a page that exactly matches, so the
+        # image fills edge-to-edge with no white borders whatsoever.
+        img = Image.open(io.BytesIO(jpg))
+        iw, ih = img.size
+        # Scale to A4 width (595pt), adjust height proportionally
+        scale = 595 / iw
+        ph = round(ih * scale)
+        pg = out.new_page(width=595, height=ph)
+        pg.insert_image(fitz.Rect(0, 0, 595, ph), stream=jpg, keep_proportion=False)
     buf = io.BytesIO()
     out.save(buf)
     buf.seek(0)
@@ -283,12 +290,11 @@ def build_pdf(pages_jpg: list[bytes]) -> bytes:
 # ═══════════════════════════════════════════════════════
 # SIDEBAR
 # ═══════════════════════════════════════════════════════
-def make_sidebar(mode: str, has_scan: bool, has_sel: bool):
-    # Mode buttons
-    def mb(key, icon, label, sub):
-        cls = "mode-btn active" if mode == key else "mode-btn"
+def make_sidebar(has_scan: bool, has_sel: bool):
+    # Mode cards — purely visual, the tabs on the right handle switching
+    def mb(icon, label, sub):
         return (
-            f'<div class="{cls}">'
+            f'<div class="mode-btn">'
             f'<span class="mode-icon">{icon}</span>'
             f'<div><div class="mode-label">{label}</div>'
             f'<div class="mode-sub">{sub}</div></div>'
@@ -296,8 +302,8 @@ def make_sidebar(mode: str, has_scan: bool, has_sel: bool):
         )
 
     modes_html = (
-        mb("extract", "📂", "Extract Images", "Crop from catalog PDF")
-        + mb("combine", "🖼️", "Combine Images", "Build PDF from images")
+        mb("📂", "Extract Images", "Crop from catalog PDF")
+        + mb("🖼️", "Combine Images", "Build PDF from images")
     )
 
     # Steps for extract mode
@@ -312,20 +318,12 @@ def make_sidebar(mode: str, has_scan: bool, has_sel: bool):
     dc = {"active":"d-a","done":"d-d","pending":"d-p"}
     lc = {"active":"l-a","done":"l-d","pending":"l-p"}
 
-    if mode == "extract":
-        steps = ["Upload PDF", "Select S.No", "Preview", "Export PDF"]
-        steps_html = "".join(
-            f'<div class="step"><div class="{dc[ss(i)]}"></div>'
-            f'<span class="{lc[ss(i)]}">{lbl}</span></div>'
-            for i, lbl in enumerate(steps)
-        )
-    else:
-        steps = ["Upload Images", "Cover Page", "Name & Export"]
-        steps_html = "".join(
-            f'<div class="step"><div class="d-p"></div>'
-            f'<span class="l-p">{lbl}</span></div>'
-            for lbl in steps
-        )
+    steps = ["Upload PDF", "Select S.No", "Preview", "Export PDF"]
+    steps_html = "".join(
+        f'<div class="step"><div class="{dc[ss(i)]}"></div>'
+        f'<span class="{lc[ss(i)]}">{lbl}</span></div>'
+        for i, lbl in enumerate(steps)
+    )
 
     return (
         f'<span class="sb-brand">Lunawat Gems</span>'
@@ -347,42 +345,9 @@ col_sb, col_main = st.columns([16, 84], gap="small")
 
 with col_sb:
     st.markdown(
-        make_sidebar(st.session_state.mode, has_scan, has_sel),
+        make_sidebar(has_scan, has_sel),
         unsafe_allow_html=True,
     )
-    # Mode switch buttons (hidden label, real buttons)
-    st.markdown("<div style='margin-top:0'>", unsafe_allow_html=True)
-    if st.button("Switch to Extract", key="sw_extract",
-                 help="Extract images from catalog PDF"):
-        st.session_state.mode = "extract"
-        st.rerun()
-    if st.button("Switch to Combine", key="sw_combine",
-                 help="Combine images into PDF"):
-        st.session_state.mode = "combine"
-        st.rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# Hide the switch buttons visually — they're just for logic
-st.markdown("""
-<style>
-button[kind="secondary"][data-testid="stButton"]:has(div p) { display:none; }
-[data-testid="stMainBlockContainer"]
-  [data-testid="stHorizontalBlock"]:first-of-type
-  > [data-testid="stColumn"]:first-child
-  [data-testid="stButton"]>button {
-    background: transparent !important;
-    color: transparent !important;
-    border: none !important;
-    height: 0 !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    min-height: 0 !important;
-    overflow: hidden !important;
-    position: absolute !important;
-    pointer-events: none !important;
-}
-</style>
-""", unsafe_allow_html=True)
 
 
 # ═══════════════════════════════════════════════════════
@@ -399,9 +364,6 @@ with col_main:
     # TAB 1 — EXTRACT (original logic, unchanged)
     # ══════════════════════════════════════════════════
     with tab_extract:
-        if st.session_state.mode != "extract":
-            st.session_state.mode = "extract"
-
         st.markdown(
             '<span class="rp-eye">Extract Mode</span>'
             '<span class="rp-title">Upload your PDF catalog</span>'
@@ -571,9 +533,6 @@ with col_main:
     # TAB 2 — COMBINE IMAGES INTO PDF
     # ══════════════════════════════════════════════════
     with tab_combine:
-        if st.session_state.mode != "combine":
-            st.session_state.mode = "combine"
-
         st.markdown(
             '<span class="rp-eye">Combine Mode</span>'
             '<span class="rp-title">Build a PDF from images</span>'
