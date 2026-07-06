@@ -214,8 +214,10 @@ html, body,
 # ═══════════════════════════════════════════════════════
 GRID_X, GRID_Y, RENDER_ZOOM = 360, 277, 2.5
 
-if "gem_registry"  not in st.session_state: st.session_state.gem_registry  = {}
-if "selected_snos" not in st.session_state: st.session_state.selected_snos = []
+if "gem_registry"   not in st.session_state: st.session_state.gem_registry   = {}
+if "selected_snos"  not in st.session_state: st.session_state.selected_snos  = []
+if "cover_page_jpg" not in st.session_state: st.session_state.cover_page_jpg = None
+if "upload_fname"   not in st.session_state: st.session_state.upload_fname   = ""
 
 
 def _remove_border(arr: np.ndarray, dark: int = 40) -> np.ndarray:
@@ -314,10 +316,13 @@ with col_main:
 
     if uploaded_file:
         file_bytes = uploaded_file.read()
+        # Store original filename (strip .pdf, will append suffix on download)
+        st.session_state.upload_fname = uploaded_file.name
 
         if rescan_btn:
-            st.session_state.gem_registry  = {}
-            st.session_state.selected_snos = []
+            st.session_state.gem_registry   = {}
+            st.session_state.selected_snos  = []
+            st.session_state.cover_page_jpg = None
             st.rerun()
 
         needs_scan = (scan_btn or not st.session_state.gem_registry) and bool(file_bytes)
@@ -353,6 +358,16 @@ with col_main:
                 for sno, bbox in lines:
                     rect          = _quadrant_rect(page, bbox) if multi else page.rect
                     registry[sno] = _render_clean(page, rect)
+
+            # Render cover page (always page 0) at full resolution
+            doc2 = fitz.open(stream=file_bytes, filetype="pdf")
+            cover_pix = doc2[0].get_pixmap(matrix=fitz.Matrix(RENDER_ZOOM, RENDER_ZOOM))
+            cover_arr = np.frombuffer(cover_pix.samples, dtype=np.uint8).reshape(
+                cover_pix.height, cover_pix.width, cover_pix.n)
+            cover_buf = io.BytesIO()
+            Image.fromarray(cover_arr[:, :, :3]).save(cover_buf, "JPEG", quality=92)
+            st.session_state.cover_page_jpg = cover_buf.getvalue()
+            doc2.close()
 
             doc.close()
             counter.empty()
@@ -401,26 +416,46 @@ with col_main:
                 st.markdown('<div class="rp-divider"></div>', unsafe_allow_html=True)
                 st.markdown(
                     f'<span class="rp-label">Export</span>'
-                    f'<p class="rp-note">Generate a PDF with <strong>{len(selected)}</strong> '
-                    f'entr{"y" if len(selected)==1 else "ies"}, one per page.</p>',
+                    f'<p class="rp-note"><strong>{len(selected)}</strong> '
+                    f'entr{"y" if len(selected)==1 else "ies"} selected — '
+                    f'one per page, full-bleed, no header text.</p>',
                     unsafe_allow_html=True,
                 )
+
+                include_cover = st.checkbox(
+                    "Include cover page (first page of PDF)",
+                    value=True,
+                )
+
                 if st.button("📄 Generate Selection PDF", use_container_width=True):
                     with st.spinner(""):
                         out = fitz.open()
+
+                        # Optional cover page
+                        if include_cover and st.session_state.cover_page_jpg:
+                            pg = out.new_page(width=595, height=842)
+                            pg.insert_image(fitz.Rect(0, 0, 595, 842),
+                                            stream=st.session_state.cover_page_jpg)
+
+                        # One gem per page, image fills entire page, no text
                         for sno in selected:
                             pg = out.new_page(width=595, height=842)
-                            pg.insert_text(fitz.Point(40, 45),
-                                           f"Lunawat Gems — S.No {sno}",
-                                           fontsize=14, color=(0, 0, 0))
-                            pg.insert_image(fitz.Rect(40, 65, 555, 780),
+                            pg.insert_image(fitz.Rect(0, 0, 595, 842),
                                             stream=reg[sno])
+
                         buf = io.BytesIO()
                         out.save(buf); buf.seek(0)
+
+                    # Build filename: "<original_name> Selection Catalog.pdf"
+                    base = st.session_state.upload_fname
+                    if base.lower().endswith(".pdf"):
+                        base = base[:-4]
+                    dl_name = f"{base} Selection Catalog.pdf"
+
                     st.download_button(
                         "⬇️ Download Catalog PDF",
                         data=buf,
-                        file_name="LGC_Selection_Catalog.pdf",
+                        file_name=dl_name,
                         mime="application/pdf",
                         use_container_width=True,
                     )
