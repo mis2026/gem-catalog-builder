@@ -316,8 +316,14 @@ with col_main:
 
     if uploaded_file:
         file_bytes = uploaded_file.read()
-        # Store original filename (strip .pdf, will append suffix on download)
-        st.session_state.upload_fname = uploaded_file.name
+        fname      = uploaded_file.name
+
+        # Detect file change → clear all previous state immediately
+        if fname != st.session_state.upload_fname:
+            st.session_state.upload_fname   = fname
+            st.session_state.gem_registry   = {}
+            st.session_state.selected_snos  = []
+            st.session_state.cover_page_jpg = None
 
         if rescan_btn:
             st.session_state.gem_registry   = {}
@@ -340,6 +346,14 @@ with col_main:
             total    = len(doc)
             registry = {}
 
+            # Render cover page from the already-open doc (page 0)
+            cover_pix = doc[0].get_pixmap(matrix=fitz.Matrix(RENDER_ZOOM, RENDER_ZOOM))
+            cover_arr = np.frombuffer(cover_pix.samples, dtype=np.uint8).reshape(
+                cover_pix.height, cover_pix.width, cover_pix.n)
+            cover_buf = io.BytesIO()
+            Image.fromarray(cover_arr[:, :, :3]).save(cover_buf, "JPEG", quality=92)
+            st.session_state.cover_page_jpg = cover_buf.getvalue()
+
             for pn in range(total):
                 counter.markdown(
                     f'<div class="pg-count">Page {pn+1} of {total}</div>',
@@ -358,16 +372,6 @@ with col_main:
                 for sno, bbox in lines:
                     rect          = _quadrant_rect(page, bbox) if multi else page.rect
                     registry[sno] = _render_clean(page, rect)
-
-            # Render cover page (always page 0) at full resolution
-            doc2 = fitz.open(stream=file_bytes, filetype="pdf")
-            cover_pix = doc2[0].get_pixmap(matrix=fitz.Matrix(RENDER_ZOOM, RENDER_ZOOM))
-            cover_arr = np.frombuffer(cover_pix.samples, dtype=np.uint8).reshape(
-                cover_pix.height, cover_pix.width, cover_pix.n)
-            cover_buf = io.BytesIO()
-            Image.fromarray(cover_arr[:, :, :3]).save(cover_buf, "JPEG", quality=92)
-            st.session_state.cover_page_jpg = cover_buf.getvalue()
-            doc2.close()
 
             doc.close()
             counter.empty()
