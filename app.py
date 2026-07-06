@@ -290,11 +290,11 @@ def build_pdf(pages_jpg: list[bytes]) -> bytes:
 # ═══════════════════════════════════════════════════════
 # SIDEBAR
 # ═══════════════════════════════════════════════════════
-def make_sidebar(has_scan: bool, has_sel: bool):
-    # Mode cards — purely visual, the tabs on the right handle switching
-    def mb(icon, label, sub):
+def make_sidebar(has_scan: bool, has_sel: bool, mode: str = "extract"):
+    def mb(key, icon, label, sub):
+        cls = "mode-btn active" if mode == key else "mode-btn"
         return (
-            f'<div class="mode-btn">'
+            f'<div class="{cls}">'
             f'<span class="mode-icon">{icon}</span>'
             f'<div><div class="mode-label">{label}</div>'
             f'<div class="mode-sub">{sub}</div></div>'
@@ -302,8 +302,8 @@ def make_sidebar(has_scan: bool, has_sel: bool):
         )
 
     modes_html = (
-        mb("📂", "Extract Images", "Crop from catalog PDF")
-        + mb("🖼️", "Combine Images", "Build PDF from images")
+        mb("extract", "📂", "Extract Images", "Crop from catalog PDF")
+        + mb("combine", "🖼️", "Combine Images", "Build PDF from images")
     )
 
     # Steps for extract mode
@@ -341,50 +341,43 @@ reg      = st.session_state.gem_registry
 has_scan = bool(reg)
 has_sel  = bool(st.session_state.selected_snos) and has_scan
 
+# Mode is tracked in query params so sidebar buttons can switch it via st.rerun()
+mode = st.query_params.get("mode", "extract")
+
 col_sb, col_main = st.columns([16, 84], gap="small")
 
 with col_sb:
-    st.markdown(
-        make_sidebar(has_scan, has_sel),
-        unsafe_allow_html=True,
-    )
+    st.markdown(make_sidebar(has_scan, has_sel, mode), unsafe_allow_html=True)
 
-# JS: clicking sidebar mode cards switches the Streamlit tab
-st.markdown("""
-<script>
-(function() {
-    function switchTab(index) {
-        // Streamlit tab buttons are <button data-baseweb="tab">
-        const tabs = window.parent.document.querySelectorAll('[data-baseweb="tab"]');
-        if (tabs[index]) tabs[index].click();
-    }
-    // Delegate clicks on .mode-btn inside the sidebar column
-    window.parent.document.addEventListener('click', function(e) {
-        const btn = e.target.closest('.mode-btn');
-        if (!btn) return;
-        const all = window.parent.document.querySelectorAll('.mode-btn');
-        const idx = Array.from(all).indexOf(btn);
-        if (idx >= 0) switchTab(idx);
-    }, true);
-})();
-</script>
-""", unsafe_allow_html=True)
+    # Real Streamlit buttons — invisible visually but fully functional
+    # They update query_params and rerun, switching the right panel content
+    st.markdown("""
+    <style>
+    /* Push these buttons behind the HTML mode cards via absolute positioning */
+    div[data-testid="stMainBlockContainer"]
+      [data-testid="stHorizontalBlock"]:first-of-type
+      > [data-testid="stColumn"]:first-child
+      .stButton { position:relative; margin-top:-74px; opacity:0; height:58px; }
+    div[data-testid="stMainBlockContainer"]
+      [data-testid="stHorizontalBlock"]:first-of-type
+      > [data-testid="stColumn"]:first-child
+      .stButton button { height:58px !important; cursor:pointer !important; }
+    </style>
+    """, unsafe_allow_html=True)
+
+    if st.button("Extract Images", key="sw_extract", use_container_width=True):
+        st.query_params["mode"] = "extract"
+        st.rerun()
+    if st.button("Combine Images", key="sw_combine", use_container_width=True):
+        st.query_params["mode"] = "combine"
+        st.rerun()
 
 
 # ═══════════════════════════════════════════════════════
-# RIGHT PANEL — mode-switched content
+# RIGHT PANEL — switches on mode query param
 # ═══════════════════════════════════════════════════════
 with col_main:
-
-    # ──────────────────────────────────────────────────
-    # MODE TABS (visible tab switcher at top of right panel)
-    # ──────────────────────────────────────────────────
-    tab_extract, tab_combine = st.tabs(["📂 Extract Images from PDF", "🖼️ Combine Images into PDF"])
-
-    # ══════════════════════════════════════════════════
-    # TAB 1 — EXTRACT (original logic, unchanged)
-    # ══════════════════════════════════════════════════
-    with tab_extract:
+    if mode == "extract":
         st.markdown(
             '<span class="rp-eye">Extract Mode</span>'
             '<span class="rp-title">Upload your PDF catalog</span>'
@@ -560,10 +553,7 @@ with col_main:
                             st.rerun()
                         st.markdown('</div>', unsafe_allow_html=True)
 
-    # ══════════════════════════════════════════════════
-    # TAB 2 — COMBINE IMAGES INTO PDF
-    # ══════════════════════════════════════════════════
-    with tab_combine:
+    elif mode == "combine":
         st.markdown(
             '<span class="rp-eye">Combine Mode</span>'
             '<span class="rp-title">Build a PDF from images</span>'
