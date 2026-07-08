@@ -609,7 +609,6 @@ with col_main:
                     st.markdown('<p class="rp-note" style="margin-top:10px;">'
                                 f'{len(selected)} entr{"y" if len(selected)==1 else "ies"} '
                                 f'selected — one per page, full-bleed.</p>',
-                                # use standard container width warning workaround if needed
                                 unsafe_allow_html=True)
 
                     if st.button("📄 Generate Selection PDF", key="gen_extract",
@@ -752,4 +751,3 @@ with col_main:
                 st.markdown('</div>', unsafe_allow_html=True)
         else:
             st.info("Upload gem images above to get started.")
-```
