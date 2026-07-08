@@ -150,16 +150,12 @@ html, body,
     opacity: 0 !important;
     pointer-events: none !important;
 }
-.top-tab:hover {
-    background: #F1F5F9;
-}
+.top-tab:hover { background: #F1F5F9; }
 .top-tab.active {
     background: #ffffff;
     box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
 }
-.top-tab.active:hover {
-    background: #ffffff;
-}
+.top-tab.active:hover { background: #ffffff; }
 .top-tab-icon {
     font-size: 20px;
     display: flex;
@@ -170,28 +166,38 @@ html, body,
     height: 36px;
     border-radius: 6px;
 }
-.top-tab.active .top-tab-icon {
-    background: #EFF6FF;
+.top-tab.active .top-tab-icon { background: #EFF6FF; }
+.top-tab-text-container { display: flex; flex-direction: column; }
+.top-tab-label { font-size: 13px; font-weight: 700; color: #475569; }
+.top-tab.active .top-tab-label { color: #0F172A; }
+.top-tab-sub { font-size: 11px; color: #94A3B8; margin-top: 1px; }
+.top-tab.active .top-tab-sub { color: #2563EB; }
+
+/* ── Scan progress ── */
+.scan-header { display:flex;align-items:center;gap:8px;margin-bottom:10px; }
+.scan-dot { width:7px;height:7px;border-radius:50%;background:#3B82F6;
+            flex-shrink:0;animation:sdot 1s ease-in-out infinite; }
+@keyframes sdot{0%,100%{opacity:1}50%{opacity:.2}}
+.scan-header-label { font-size:13px;font-weight:600;color:#334155; }
+.scan-status-row {
+    display:flex;align-items:center;justify-content:space-between;
+    background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;
+    padding:10px 16px;margin-top:8px;
 }
-.top-tab-text-container {
-    display: flex;
-    flex-direction: column;
+.scan-page-info { font-size:13px;font-weight:600;color:#0F172A; }
+.scan-page-info span { font-weight:400;color:#94A3B8; }
+.scan-gems-badge {
+    display:inline-flex;align-items:center;gap:5px;
+    background:#EFF6FF;color:#1D4ED8;
+    font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;
 }
-.top-tab-label {
-    font-size: 13px;
-    font-weight: 700;
-    color: #475569;
+/* native progress bar tweaks */
+[data-testid="stProgressBar"] > div {
+    background:#EEF2FF !important;border-radius:999px !important;height:6px !important;
 }
-.top-tab.active .top-tab-label {
-    color: #0F172A;
-}
-.top-tab-sub {
-    font-size: 11px;
-    color: #94A3B8;
-    margin-top: 1px;
-}
-.top-tab.active .top-tab-sub {
-    color: #2563EB;
+[data-testid="stProgressBar"] > div > div {
+    background:linear-gradient(90deg,#3B82F6,#818CF8) !important;
+    border-radius:999px !important;transition:width .25s ease !important;
 }
 
 /* ── Right panel ── */
@@ -208,25 +214,12 @@ html, body,
              font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px; }
 .rp-note  { font-size:13px;color:#64748B;margin:6px 0 14px;line-height:1.5; }
 
-/* Scan animation */
-.scan-row { display:flex;align-items:center;gap:8px;font-size:13px;color:#475569;margin-bottom:8px; }
-.scan-dot { width:7px;height:7px;border-radius:50%;background:#3B82F6;
-            flex-shrink:0;animation:sdot 1s ease-in-out infinite; }
-@keyframes sdot{0%,100%{opacity:1}50%{opacity:.2}}
-.prog-track { height:4px;background:#EEF2FF;border-radius:999px;overflow:hidden; }
-.prog-bar   { height:4px;width:45%;border-radius:999px;
-              background:linear-gradient(90deg,#3B82F6,#818CF8);
-              animation:pbar 1.8s ease-in-out infinite; }
-@keyframes pbar{0%{transform:translateX(-120%)}100%{transform:translateX(300%)}}
-.pg-count { font-size:11px;color:#94A3B8;margin-top:4px; }
-
 /* Widgets */
 [data-testid="stFileUploader"] {
     border:1.5px solid #E2E8F0 !important;border-radius:9px !important;
     background:#FAFBFC !important;padding:2px 10px !important;margin-bottom:12px !important;
 }
 [data-testid="stFileUploader"] section { padding:4px 0 !important; }
-
 [data-testid="stTextInput"] input {
     border:1.5px solid #E2E8F0 !important;border-radius:8px !important;
     font-size:13px !important;padding:10px 14px !important;background:#FAFBFC !important;
@@ -235,7 +228,6 @@ html, body,
 [data-testid="stTextInput"] input:focus {
     border-color:#3B82F6 !important;box-shadow:0 0 0 3px rgba(59,130,246,.1) !important;
 }
-
 [data-testid="stMultiSelect"]>div>div {
     border:1.5px solid #E2E8F0 !important;border-radius:8px !important;
     font-size:13px !important;min-height:42px !important;background:#FAFBFC !important;
@@ -243,7 +235,6 @@ html, body,
 [data-testid="stMultiSelect"]>div>div:focus-within {
     border-color:#3B82F6 !important;box-shadow:0 0 0 3px rgba(59,130,246,.1) !important;
 }
-
 [data-testid="stCheckbox"] label { font-size:13px !important;color:#334155 !important; }
 
 /* Primary button */
@@ -285,7 +276,7 @@ html, body,
 # ═══════════════════════════════════════════════════════
 # CORE LOGIC
 # ═══════════════════════════════════════════════════════
-GRID_X, GRID_Y, RENDER_ZOOM = 360, 277, 2.5
+GRID_X, GRID_Y, RENDER_ZOOM = 360, 277, 2.0  # 2.0 = ~36% faster than 2.5
 
 for k, v in {
     "gem_registry":   {},
@@ -333,7 +324,6 @@ def _quadrant_rect(page: fitz.Page, bbox) -> fitz.Rect:
 
 
 def build_pdf(pages_jpg: list[bytes]) -> bytes:
-    """Turn a list of JPEG byte strings into a PDF, each image full-bleed A4."""
     out = fitz.open()
     for jpg in pages_jpg:
         img = Image.open(io.BytesIO(jpg))
@@ -379,7 +369,6 @@ def make_sidebar(has_scan: bool, has_sel: bool, mode: str = "extract"):
         f'<span class="{lc[ss(i)]}">{lbl}</span></div>'
         for i, lbl in enumerate(steps)
     )
-
     return (
         f'<span class="sb-brand">Lunawat Gems</span>'
         f'<span class="sb-title">Gem Catalog<br>Builder</span>'
@@ -403,7 +392,6 @@ def make_top_tabs(mode: str = "extract"):
             f'</div>'
             f'</div>'
         )
-
     tabs_html = (
         tab("extract", "📂", "Extract Images", "Crop from catalog PDF")
         + tab("combine", "🖼️", "Combine Images", "Build PDF from images")
@@ -417,23 +405,16 @@ def make_top_tabs(mode: str = "extract"):
 reg      = st.session_state.gem_registry
 has_scan = bool(reg)
 has_sel  = bool(st.session_state.selected_snos) and has_scan
-
-mode = st.query_params.get("mode", "extract")
+mode     = st.query_params.get("mode", "extract")
 
 col_sb, col_main = st.columns([16, 84], gap="small")
 
 with col_sb:
     st.markdown(make_sidebar(has_scan, has_sel, mode), unsafe_allow_html=True)
 
-
-# ═══════════════════════════════════════════════════════
-# RIGHT PANEL
-# ═══════════════════════════════════════════════════════
 with col_main:
     st.markdown(make_top_tabs(mode), unsafe_allow_html=True)
 
-    # Hidden buttons — wired to tab cards via JS below.
-    # Using st.button + st.rerun() goes through WebSocket = NO white flash.
     _t1, _t2 = st.columns(2, gap="small")
     with _t1:
         _sw_extract = st.button("Extract Images", key="sw_extract", use_container_width=True)
@@ -446,7 +427,6 @@ with col_main:
         st.query_params["mode"] = "combine"
         st.rerun()
 
-    # Wire visual tab card clicks → programmatic click on hidden Streamlit buttons
     components.html("""
         <script>
         (function tryWire() {
@@ -513,12 +493,15 @@ with col_main:
             if needs_scan:
                 st.markdown('<div class="rp-divider"></div>', unsafe_allow_html=True)
                 st.markdown(
-                    '<div class="scan-row"><div class="scan-dot"></div>'
-                    'Scanning pages and removing borders…</div>'
-                    '<div class="prog-track"><div class="prog-bar"></div></div>',
+                    '<div class="scan-header">'
+                    '<div class="scan-dot"></div>'
+                    '<span class="scan-header-label">Scanning catalog…</span>'
+                    '</div>',
                     unsafe_allow_html=True,
                 )
-                counter  = st.empty()
+                prog   = st.progress(0)
+                status = st.empty()
+
                 doc      = fitz.open(stream=file_bytes, filetype="pdf")
                 total    = len(doc)
                 registry = {}
@@ -531,8 +514,16 @@ with col_main:
                 st.session_state.cover_page_jpg = cover_buf.getvalue()
 
                 for pn in range(total):
-                    counter.markdown(
-                        f'<div class="pg-count">Page {pn+1} of {total}</div>',
+                    prog.progress((pn + 1) / total)
+                    status.markdown(
+                        f'<div class="scan-status-row">'
+                        f'<span class="scan-page-info">'
+                        f'Page {pn + 1} <span>of {total}</span>'
+                        f'</span>'
+                        f'<span class="scan-gems-badge">'
+                        f'💎 {len(registry)} gems found'
+                        f'</span>'
+                        f'</div>',
                         unsafe_allow_html=True,
                     )
                     page  = doc[pn]
@@ -550,7 +541,8 @@ with col_main:
                         registry[sno] = _render_clean(page, rect)
 
                 doc.close()
-                counter.empty()
+                prog.empty()
+                status.empty()
                 st.session_state.gem_registry = registry
                 st.rerun()
 
@@ -719,21 +711,18 @@ with col_main:
                          use_container_width=True):
                 with st.spinner(""):
                     pages_jpg = []
-
                     if cover_img:
                         cover_img.seek(0)
                         pil_cover = Image.open(cover_img).convert("RGB")
                         cb = io.BytesIO()
                         pil_cover.save(cb, "JPEG", quality=92)
                         pages_jpg.append(cb.getvalue())
-
                     for f in gem_images:
                         f.seek(0)
                         pil_img = Image.open(f).convert("RGB")
                         gb = io.BytesIO()
                         pil_img.save(gb, "JPEG", quality=92)
                         pages_jpg.append(gb.getvalue())
-
                     pdf_bytes = build_pdf(pages_jpg)
 
                 dl_name = f"{comb_catalog_name.strip() or 'Gem Catalog'}.pdf"
