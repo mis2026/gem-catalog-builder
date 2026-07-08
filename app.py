@@ -136,10 +136,18 @@ html, body,
     transition: all 0.2s ease;
     user-select: none;
     background: transparent;
+    text-decoration: none !important;
+}
+.top-tab:hover {
+    background: #F1F5F9;
+    text-decoration: none !important;
 }
 .top-tab.active {
     background: #ffffff;
     box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+.top-tab.active:hover {
+    background: #ffffff;
 }
 .top-tab-icon {
     font-size: 20px;
@@ -173,30 +181,6 @@ html, body,
 }
 .top-tab.active .top-tab-sub {
     color: #2563EB;
-}
-
-/* Position Streamlit buttons to overlay the top-tabs */
-[data-testid="stColumn"]:last-child [data-testid="stVerticalBlock"] > div:nth-child(2),
-.stColumn:last-child .stVerticalBlock > div:nth-child(2),
-[data-testid="stColumn"]:last-child [data-testid="stHorizontalBlock"]:first-of-type,
-.stColumn:last-child .stHorizontalBlock:first-of-type {
-    margin-bottom: 24px !important;
-}
-[data-testid="stColumn"]:last-child [data-testid="stVerticalBlock"] > div:nth-child(2) .stButton,
-.stColumn:last-child .stVerticalBlock > div:nth-child(2) .stButton,
-[data-testid="stColumn"]:last-child [data-testid="stHorizontalBlock"]:first-of-type .stButton,
-.stColumn:last-child .stHorizontalBlock:first-of-type .stButton {
-    position: relative !important;
-    margin-top: -92px !important; /* Pull up to overlay the top-tabs */
-    opacity: 0 !important;
-    height: 68px !important;
-}
-[data-testid="stColumn"]:last-child [data-testid="stVerticalBlock"] > div:nth-child(2) .stButton button,
-.stColumn:last-child .stVerticalBlock > div:nth-child(2) .stButton button,
-[data-testid="stColumn"]:last-child [data-testid="stHorizontalBlock"]:first-of-type .stButton button,
-.stColumn:last-child .stHorizontalBlock:first-of-type .stButton button {
-    height: 68px !important;
-    cursor: pointer !important;
 }
 
 /* ── Right panel ── */
@@ -407,13 +391,13 @@ def make_top_tabs(mode: str = "extract"):
     def tab(key, icon, label, sub):
         cls = "top-tab active" if mode == key else "top-tab"
         return (
-            f'<div class="{cls}">'
+            f'<a href="?mode={key}" target="_self" class="{cls}">'
             f'<span class="top-tab-icon">{icon}</span>'
             f'<div class="top-tab-text-container">'
             f'<div class="top-tab-label">{label}</div>'
             f'<div class="top-tab-sub">{sub}</div>'
             f'</div>'
-            f'</div>'
+            f'</a>'
         )
 
     tabs_html = (
@@ -445,17 +429,6 @@ with col_sb:
 with col_main:
     # ── Render top tabs selector ──
     st.markdown(make_top_tabs(mode), unsafe_allow_html=True)
-
-    # Invisible buttons placed directly on top of the tab cards
-    t_col1, t_col2 = st.columns(2, gap="small")
-    with t_col1:
-        if st.button("Extract Images", key="sw_extract", use_container_width=True):
-            st.query_params["mode"] = "extract"
-            st.rerun()
-    with t_col2:
-        if st.button("Combine Images", key="sw_combine", use_container_width=True):
-            st.query_params["mode"] = "combine"
-            st.rerun()
 
     # Content based on mode
     if mode == "extract":
