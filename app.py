@@ -1,3 +1,8 @@
+Viewed app.py:1-754
+
+Here is the complete, updated Python code for your Streamlit application, ready to copy and paste directly into your Git repository:
+
+```python
 import streamlit as st
 import fitz
 import re, io
@@ -99,19 +104,6 @@ html, body,
 .sb-title { font-size:18px;font-weight:700;color:#fff;
             line-height:1.3;margin-bottom:28px;display:block; }
 
-/* Mode toggle buttons */
-.mode-btn {
-    display:flex;align-items:center;gap:10px;
-    padding:11px 14px;border-radius:9px;
-    margin-bottom:8px;transition:background .15s;
-    cursor:pointer;user-select:none;
-}
-.mode-btn:hover { background:#1A2A40 !important; }
-.mode-btn.active { background:#1E3A5F; }
-.mode-icon { font-size:16px;flex-shrink:0; }
-.mode-label { font-size:13px;font-weight:600;color:#fff; }
-.mode-sub   { font-size:11px;color:#4B7BCA;margin-top:1px; }
-
 .sb-divider { height:1px;background:#1E2D45;margin:20px 0; }
 
 /* Steps */
@@ -127,6 +119,95 @@ html, body,
 .l-a{font-size:12px;font-weight:600;color:#fff;}
 .l-d{font-size:12px;font-weight:500;color:#4B7BCA;}
 .l-p{font-size:12px;font-weight:400;color:#334E6A;}
+
+/* ── Top Tabs Switcher ── */
+.top-tabs-container {
+    display: flex;
+    background: #F8FAFC;
+    padding: 6px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    position: relative;
+    border: 1px solid #E2E8F0;
+    gap: 8px;
+}
+.top-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    user-select: none;
+    background: transparent;
+}
+.top-tab.active {
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+.top-tab-icon {
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #F1F5F9;
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+}
+.top-tab.active .top-tab-icon {
+    background: #EFF6FF;
+}
+.top-tab-text-container {
+    display: flex;
+    flex-direction: column;
+}
+.top-tab-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #475569;
+}
+.top-tab.active .top-tab-label {
+    color: #0F172A;
+}
+.top-tab-sub {
+    font-size: 11px;
+    color: #94A3B8;
+    margin-top: 1px;
+}
+.top-tab.active .top-tab-sub {
+    color: #2563EB;
+}
+
+/* Position Streamlit buttons to overlay the top-tabs */
+div[data-testid="stMainBlockContainer"]
+  [data-testid="stHorizontalBlock"]:first-of-type
+  > [data-testid="stColumn"]:last-child
+  > [data-testid="stVerticalBlock"]
+  > [data-testid="stHorizontalBlock"]:first-of-type {
+    margin-bottom: 24px !important;
+}
+div[data-testid="stMainBlockContainer"]
+  [data-testid="stHorizontalBlock"]:first-of-type
+  > [data-testid="stColumn"]:last-child
+  > [data-testid="stVerticalBlock"]
+  > [data-testid="stHorizontalBlock"]:first-of-type
+  .stButton {
+    position: relative;
+    margin-top: -92px !important; /* Pull up to overlay the top-tabs */
+    opacity: 0 !important;
+    height: 68px !important;
+}
+div[data-testid="stMainBlockContainer"]
+  [data-testid="stHorizontalBlock"]:first-of-type
+  > [data-testid="stColumn"]:last-child
+  > [data-testid="stVerticalBlock"]
+  > [data-testid="stHorizontalBlock"]:first-of-type
+  .stButton button {
+    height: 68px !important;
+    cursor: pointer !important;
+}
 
 /* ── Right panel ── */
 .rp-eye   { font-size:10px;font-weight:700;letter-spacing:.16em;color:#3B82F6;
@@ -291,34 +372,30 @@ def build_pdf(pages_jpg: list[bytes]) -> bytes:
 # SIDEBAR
 # ═══════════════════════════════════════════════════════
 def make_sidebar(has_scan: bool, has_sel: bool, mode: str = "extract"):
-    def mb(key, icon, label, sub):
-        cls = "mode-btn active" if mode == key else "mode-btn"
-        return (
-            f'<div class="{cls}">'
-            f'<span class="mode-icon">{icon}</span>'
-            f'<div><div class="mode-label">{label}</div>'
-            f'<div class="mode-sub">{sub}</div></div>'
-            f'</div>'
-        )
-
-    modes_html = (
-        mb("extract", "📂", "Extract Images", "Crop from catalog PDF")
-        + mb("combine", "🖼️", "Combine Images", "Build PDF from images")
-    )
-
-    # Steps for extract mode
-    def ss(i):
-        if i == 0: return "done"   if has_scan  else "active"
-        if i == 1:
-            if has_sel:  return "done"
-            if has_scan: return "active"
-            return "pending"
-        return "active" if has_sel else "pending"
+    # Steps logic based on active mode
+    if mode == "extract":
+        steps = ["Upload PDF", "Select S.No", "Preview", "Export PDF"]
+        def ss(i):
+            if i == 0: return "done"   if has_scan  else "active"
+            if i == 1:
+                if has_sel:  return "done"
+                if has_scan: return "active"
+                return "pending"
+            return "active" if has_sel else "pending"
+    else:
+        # Steps for combine mode
+        steps = ["Upload Images", "Upload Cover", "Catalog Name", "Export PDF"]
+        has_gems = bool(st.session_state.get("comb_gems"))
+        has_name = bool(st.session_state.get("comb_name"))
+        def ss(i):
+            if i == 0: return "done" if has_gems else "active"
+            if i == 1: return "done" if has_gems else "pending"
+            if i == 2: return "active" if has_gems else "pending"
+            return "active" if (has_gems and has_name) else "pending"
 
     dc = {"active":"d-a","done":"d-d","pending":"d-p"}
     lc = {"active":"l-a","done":"l-d","pending":"l-p"}
 
-    steps = ["Upload PDF", "Select S.No", "Preview", "Export PDF"]
     steps_html = "".join(
         f'<div class="step"><div class="{dc[ss(i)]}"></div>'
         f'<span class="{lc[ss(i)]}">{lbl}</span></div>'
@@ -328,10 +405,32 @@ def make_sidebar(has_scan: bool, has_sel: bool, mode: str = "extract"):
     return (
         f'<span class="sb-brand">Lunawat Gems</span>'
         f'<span class="sb-title">Gem Catalog<br>Builder</span>'
-        f'{modes_html}'
-        f'<div class="sb-divider"></div>'
+        f'<div class="sb-divider" style="margin-top:0;"></div>'
         f'{steps_html}'
     )
+
+
+# ═══════════════════════════════════════════════════════
+# TOP TABS GENERATOR
+# ═══════════════════════════════════════════════════════
+def make_top_tabs(mode: str = "extract"):
+    def tab(key, icon, label, sub):
+        cls = "top-tab active" if mode == key else "top-tab"
+        return (
+            f'<div class="{cls}">'
+            f'<span class="top-tab-icon">{icon}</span>'
+            f'<div class="top-tab-text-container">'
+            f'<div class="top-tab-label">{label}</div>'
+            f'<div class="top-tab-sub">{sub}</div>'
+            f'</div>'
+            f'</div>'
+        )
+
+    tabs_html = (
+        tab("extract", "📂", "Extract Images", "Crop from catalog PDF")
+        + tab("combine", "🖼️", "Combine Images", "Build PDF from images")
+    )
+    return f'<div class="top-tabs-container">{tabs_html}</div>'
 
 
 # ═══════════════════════════════════════════════════════
@@ -341,7 +440,7 @@ reg      = st.session_state.gem_registry
 has_scan = bool(reg)
 has_sel  = bool(st.session_state.selected_snos) and has_scan
 
-# Mode is tracked in query params so sidebar buttons can switch it via st.rerun()
+# Mode is tracked in query params
 mode = st.query_params.get("mode", "extract")
 
 col_sb, col_main = st.columns([16, 84], gap="small")
@@ -349,34 +448,26 @@ col_sb, col_main = st.columns([16, 84], gap="small")
 with col_sb:
     st.markdown(make_sidebar(has_scan, has_sel, mode), unsafe_allow_html=True)
 
-    # Real Streamlit buttons — invisible visually but fully functional
-    # They update query_params and rerun, switching the right panel content
-    st.markdown("""
-    <style>
-    /* Push these buttons behind the HTML mode cards via absolute positioning */
-    div[data-testid="stMainBlockContainer"]
-      [data-testid="stHorizontalBlock"]:first-of-type
-      > [data-testid="stColumn"]:first-child
-      .stButton { position:relative; margin-top:-74px; opacity:0; height:58px; }
-    div[data-testid="stMainBlockContainer"]
-      [data-testid="stHorizontalBlock"]:first-of-type
-      > [data-testid="stColumn"]:first-child
-      .stButton button { height:58px !important; cursor:pointer !important; }
-    </style>
-    """, unsafe_allow_html=True)
-
-    if st.button("Extract Images", key="sw_extract", use_container_width=True):
-        st.query_params["mode"] = "extract"
-        st.rerun()
-    if st.button("Combine Images", key="sw_combine", use_container_width=True):
-        st.query_params["mode"] = "combine"
-        st.rerun()
-
 
 # ═══════════════════════════════════════════════════════
 # RIGHT PANEL — switches on mode query param
 # ═══════════════════════════════════════════════════════
 with col_main:
+    # ── Render top tabs selector ──
+    st.markdown(make_top_tabs(mode), unsafe_allow_html=True)
+
+    # Invisible buttons placed directly on top of the tab cards
+    t_col1, t_col2 = st.columns(2, gap="small")
+    with t_col1:
+        if st.button("Extract Images", key="sw_extract", use_container_width=True):
+            st.query_params["mode"] = "extract"
+            st.rerun()
+    with t_col2:
+        if st.button("Combine Images", key="sw_combine", use_container_width=True):
+            st.query_params["mode"] = "combine"
+            st.rerun()
+
+    # Content based on mode
     if mode == "extract":
         st.markdown(
             '<span class="rp-eye">Extract Mode</span>'
@@ -523,6 +614,7 @@ with col_main:
                     st.markdown('<p class="rp-note" style="margin-top:10px;">'
                                 f'{len(selected)} entr{"y" if len(selected)==1 else "ies"} '
                                 f'selected — one per page, full-bleed.</p>',
+                                # use standard container width warning workaround if needed
                                 unsafe_allow_html=True)
 
                     if st.button("📄 Generate Selection PDF", key="gen_extract",
@@ -665,3 +757,4 @@ with col_main:
                 st.markdown('</div>', unsafe_allow_html=True)
         else:
             st.info("Upload gem images above to get started.")
+```
