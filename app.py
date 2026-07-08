@@ -176,30 +176,25 @@ html, body,
 }
 
 /* Position Streamlit buttons to overlay the top-tabs */
-div[data-testid="stMainBlockContainer"]
-  [data-testid="stHorizontalBlock"]:first-of-type
-  > [data-testid="stColumn"]:last-child
-  > [data-testid="stVerticalBlock"]
-  > [data-testid="stHorizontalBlock"]:first-of-type {
+[data-testid="stColumn"]:last-child [data-testid="stVerticalBlock"] > div:nth-child(2),
+.stColumn:last-child .stVerticalBlock > div:nth-child(2),
+[data-testid="stColumn"]:last-child [data-testid="stHorizontalBlock"]:first-of-type,
+.stColumn:last-child .stHorizontalBlock:first-of-type {
     margin-bottom: 24px !important;
 }
-div[data-testid="stMainBlockContainer"]
-  [data-testid="stHorizontalBlock"]:first-of-type
-  > [data-testid="stColumn"]:last-child
-  > [data-testid="stVerticalBlock"]
-  > [data-testid="stHorizontalBlock"]:first-of-type
-  .stButton {
-    position: relative;
+[data-testid="stColumn"]:last-child [data-testid="stVerticalBlock"] > div:nth-child(2) .stButton,
+.stColumn:last-child .stVerticalBlock > div:nth-child(2) .stButton,
+[data-testid="stColumn"]:last-child [data-testid="stHorizontalBlock"]:first-of-type .stButton,
+.stColumn:last-child .stHorizontalBlock:first-of-type .stButton {
+    position: relative !important;
     margin-top: -92px !important; /* Pull up to overlay the top-tabs */
     opacity: 0 !important;
     height: 68px !important;
 }
-div[data-testid="stMainBlockContainer"]
-  [data-testid="stHorizontalBlock"]:first-of-type
-  > [data-testid="stColumn"]:last-child
-  > [data-testid="stVerticalBlock"]
-  > [data-testid="stHorizontalBlock"]:first-of-type
-  .stButton button {
+[data-testid="stColumn"]:last-child [data-testid="stVerticalBlock"] > div:nth-child(2) .stButton button,
+.stColumn:last-child .stVerticalBlock > div:nth-child(2) .stButton button,
+[data-testid="stColumn"]:last-child [data-testid="stHorizontalBlock"]:first-of-type .stButton button,
+.stColumn:last-child .stHorizontalBlock:first-of-type .stButton button {
     height: 68px !important;
     cursor: pointer !important;
 }
