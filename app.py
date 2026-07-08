@@ -1,8 +1,3 @@
-Viewed app.py:1-754
-
-Here is the complete, updated Python code for your Streamlit application, ready to copy and paste directly into your Git repository:
-
-```python
 import streamlit as st
 import fitz
 import re, io
