@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import fitz
 import re, io
 import numpy as np
@@ -136,11 +137,21 @@ html, body,
     transition: all 0.2s ease;
     user-select: none;
     background: transparent;
-    text-decoration: none !important;
+    cursor: pointer;
+}
+
+/* Hide the invisible switcher buttons — they exist only for JS .click() */
+[data-testid="stColumn"]:last-child [data-testid="stHorizontalBlock"]:first-of-type,
+.stColumn:last-child .stHorizontalBlock:first-of-type {
+    position: absolute !important;
+    height: 1px !important;
+    width: 1px !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
 }
 .top-tab:hover {
     background: #F1F5F9;
-    text-decoration: none !important;
 }
 .top-tab.active {
     background: #ffffff;
@@ -272,11 +283,10 @@ html, body,
 
 
 # ═══════════════════════════════════════════════════════
-# CORE LOGIC — unchanged
+# CORE LOGIC
 # ═══════════════════════════════════════════════════════
 GRID_X, GRID_Y, RENDER_ZOOM = 360, 277, 2.5
 
-# Session state
 for k, v in {
     "gem_registry":   {},
     "selected_snos":  [],
@@ -326,12 +336,8 @@ def build_pdf(pages_jpg: list[bytes]) -> bytes:
     """Turn a list of JPEG byte strings into a PDF, each image full-bleed A4."""
     out = fitz.open()
     for jpg in pages_jpg:
-        # Match page size to image aspect ratio to avoid any letterboxing.
-        # Decode image dims, then create a page that exactly matches, so the
-        # image fills edge-to-edge with no white borders whatsoever.
         img = Image.open(io.BytesIO(jpg))
         iw, ih = img.size
-        # Scale to A4 width (595pt), adjust height proportionally
         scale = 595 / iw
         ph = round(ih * scale)
         pg = out.new_page(width=595, height=ph)
@@ -346,7 +352,6 @@ def build_pdf(pages_jpg: list[bytes]) -> bytes:
 # SIDEBAR
 # ═══════════════════════════════════════════════════════
 def make_sidebar(has_scan: bool, has_sel: bool, mode: str = "extract"):
-    # Steps logic based on active mode
     if mode == "extract":
         steps = ["Upload PDF", "Select S.No", "Preview", "Export PDF"]
         def ss(i):
@@ -357,7 +362,6 @@ def make_sidebar(has_scan: bool, has_sel: bool, mode: str = "extract"):
                 return "pending"
             return "active" if has_sel else "pending"
     else:
-        # Steps for combine mode
         steps = ["Upload Images", "Upload Cover", "Catalog Name", "Export PDF"]
         has_gems = bool(st.session_state.get("comb_gems"))
         has_name = bool(st.session_state.get("comb_name"))
@@ -391,13 +395,13 @@ def make_top_tabs(mode: str = "extract"):
     def tab(key, icon, label, sub):
         cls = "top-tab active" if mode == key else "top-tab"
         return (
-            f'<a href="?mode={key}" target="_self" class="{cls}">'
+            f'<div class="{cls}" data-mode="{key}">'
             f'<span class="top-tab-icon">{icon}</span>'
             f'<div class="top-tab-text-container">'
             f'<div class="top-tab-label">{label}</div>'
             f'<div class="top-tab-sub">{sub}</div>'
             f'</div>'
-            f'</a>'
+            f'</div>'
         )
 
     tabs_html = (
@@ -414,7 +418,6 @@ reg      = st.session_state.gem_registry
 has_scan = bool(reg)
 has_sel  = bool(st.session_state.selected_snos) and has_scan
 
-# Mode is tracked in query params
 mode = st.query_params.get("mode", "extract")
 
 col_sb, col_main = st.columns([16, 84], gap="small")
@@ -424,13 +427,51 @@ with col_sb:
 
 
 # ═══════════════════════════════════════════════════════
-# RIGHT PANEL — switches on mode query param
+# RIGHT PANEL
 # ═══════════════════════════════════════════════════════
 with col_main:
-    # ── Render top tabs selector ──
     st.markdown(make_top_tabs(mode), unsafe_allow_html=True)
 
-    # Content based on mode
+    # Hidden buttons — wired to tab cards via JS below.
+    # Using st.button + st.rerun() goes through WebSocket = NO white flash.
+    _t1, _t2 = st.columns(2, gap="small")
+    with _t1:
+        _sw_extract = st.button("Extract Images", key="sw_extract", use_container_width=True)
+    with _t2:
+        _sw_combine = st.button("Combine Images", key="sw_combine", use_container_width=True)
+    if _sw_extract:
+        st.query_params["mode"] = "extract"
+        st.rerun()
+    if _sw_combine:
+        st.query_params["mode"] = "combine"
+        st.rerun()
+
+    # Wire visual tab card clicks → programmatic click on hidden Streamlit buttons
+    components.html("""
+        <script>
+        (function tryWire() {
+            try {
+                var doc = window.parent.document;
+                var tabs = doc.querySelectorAll('.top-tab[data-mode]');
+                if (!tabs.length) { setTimeout(tryWire, 150); return; }
+                tabs.forEach(function(tab) {
+                    if (tab._wired) return;
+                    tab._wired = true;
+                    tab.addEventListener('click', function() {
+                        var targetMode = tab.getAttribute('data-mode');
+                        var btns = doc.querySelectorAll('[data-testid="stButton"] button');
+                        btns.forEach(function(btn) {
+                            var txt = btn.innerText.trim();
+                            if (targetMode === 'extract' && txt === 'Extract Images') btn.click();
+                            if (targetMode === 'combine' && txt === 'Combine Images') btn.click();
+                        });
+                    });
+                });
+            } catch(e) { console.warn('tab-wire:', e); }
+        })();
+        </script>
+    """, height=0)
+
     if mode == "extract":
         st.markdown(
             '<span class="rp-eye">Extract Mode</span>'
@@ -482,7 +523,6 @@ with col_main:
                 total    = len(doc)
                 registry = {}
 
-                # Cover page from doc[0] before loop
                 cover_pix = doc[0].get_pixmap(matrix=fitz.Matrix(RENDER_ZOOM, RENDER_ZOOM))
                 cover_arr = np.frombuffer(cover_pix.samples, dtype=np.uint8).reshape(
                     cover_pix.height, cover_pix.width, cover_pix.n)
@@ -555,7 +595,6 @@ with col_main:
                     st.markdown('<div class="rp-divider"></div>', unsafe_allow_html=True)
                     st.markdown('<span class="rp-label">Export</span>', unsafe_allow_html=True)
 
-                    # Catalog name input
                     base_name = st.session_state.upload_fname.removesuffix(".pdf").removesuffix(".PDF")
                     catalog_name = st.text_input(
                         "Catalog name (used as PDF filename)",
@@ -615,7 +654,6 @@ with col_main:
             unsafe_allow_html=True,
         )
 
-        # ── Step 1: Gem images ─────────────────────────
         st.markdown('<span class="rp-label">Gem Images</span>', unsafe_allow_html=True)
         gem_images = st.file_uploader(
             "Upload gem images (PNG, JPG, WEBP)",
@@ -627,7 +665,6 @@ with col_main:
 
         st.markdown('<div class="rp-divider"></div>', unsafe_allow_html=True)
 
-        # ── Step 2: Optional cover page ────────────────
         st.markdown(
             '<span class="rp-label">Cover Page (Optional)</span>'
             '<p class="rp-note" style="margin-bottom:10px;">'
@@ -646,7 +683,6 @@ with col_main:
 
         st.markdown('<div class="rp-divider"></div>', unsafe_allow_html=True)
 
-        # ── Step 3: Catalog name ────────────────────────
         st.markdown(
             '<span class="rp-label">Catalog Name</span>'
             '<p class="rp-note" style="margin-bottom:10px;">'
@@ -669,7 +705,6 @@ with col_main:
                 unsafe_allow_html=True,
             )
 
-            # Preview thumbnails in rows of 4
             st.markdown('<div class="rp-divider"></div>', unsafe_allow_html=True)
             st.markdown('<span class="rp-label">Preview Order</span>', unsafe_allow_html=True)
             for row_imgs in [gem_images[i:i+4] for i in range(0, len(gem_images), 4)]:
@@ -685,7 +720,6 @@ with col_main:
                 with st.spinner(""):
                     pages_jpg = []
 
-                    # Cover page first
                     if cover_img:
                         cover_img.seek(0)
                         pil_cover = Image.open(cover_img).convert("RGB")
@@ -693,7 +727,6 @@ with col_main:
                         pil_cover.save(cb, "JPEG", quality=92)
                         pages_jpg.append(cb.getvalue())
 
-                    # Gem images in upload order
                     for f in gem_images:
                         f.seek(0)
                         pil_img = Image.open(f).convert("RGB")
