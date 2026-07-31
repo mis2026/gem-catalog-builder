@@ -140,9 +140,12 @@ html, body,
     cursor: pointer;
 }
 
-/* Hide the invisible switcher buttons — they exist only for JS .click() */
-[data-testid="stColumn"]:last-child [data-testid="stHorizontalBlock"]:first-of-type,
-.stColumn:last-child .stHorizontalBlock:first-of-type {
+/* Hide the invisible switcher buttons — they exist only for JS .click().
+   Scope strictly to the row that actually contains the switcher buttons
+   (identified by their Streamlit key class) so it can never collapse the
+   preview image columns. */
+[data-testid="stHorizontalBlock"]:has(.st-key-sw_extract),
+[data-testid="stHorizontalBlock"]:has(.st-key-sw_combine) {
     position: absolute !important;
     height: 1px !important;
     width: 1px !important;
