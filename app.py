@@ -485,11 +485,13 @@ with col_main:
                 st.session_state.upload_fname   = fname
                 st.session_state.gem_registry   = {}
                 st.session_state.selected_snos  = []
+                st.session_state.ms_snos        = []
                 st.session_state.cover_page_jpg = None
 
             if rescan_btn:
                 st.session_state.gem_registry   = {}
                 st.session_state.selected_snos  = []
+                st.session_state.ms_snos        = []
                 st.session_state.cover_page_jpg = None
                 st.rerun()
 
@@ -564,9 +566,16 @@ with col_main:
                     f'</div>',
                     unsafe_allow_html=True,
                 )
+                # Keep only selections that still exist in the current scan,
+                # then drive the widget entirely from its own key. This avoids
+                # the default/session-state tug-of-war that made a selection
+                # require two clicks to register.
+                st.session_state.ms_snos = [
+                    s for s in st.session_state.get("ms_snos", []) if s in reg
+                ]
                 selected = st.multiselect(
                     "s", options=sorted(reg.keys()),
-                    default=[s for s in st.session_state.selected_snos if s in reg],
+                    key="ms_snos",
                     format_func=lambda x: f"S.No {x}",
                     placeholder="Type to search or click to select…",
                     label_visibility="collapsed",
