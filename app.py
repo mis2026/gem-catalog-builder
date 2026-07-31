@@ -141,17 +141,19 @@ html, body,
 }
 
 /* Hide the invisible switcher buttons — they exist only for JS .click().
-   Scope strictly to the row that actually contains the switcher buttons
-   (identified by their Streamlit key class) so it can never collapse the
-   preview image columns. */
-[data-testid="stHorizontalBlock"]:has(.st-key-sw_extract),
-[data-testid="stHorizontalBlock"]:has(.st-key-sw_combine) {
+   Target ONLY the button containers themselves via their Streamlit key
+   class. Never target an ancestor, so the app card and the preview image
+   columns are left completely untouched. */
+.st-key-sw_extract,
+.st-key-sw_combine {
     position: absolute !important;
     height: 1px !important;
     width: 1px !important;
     overflow: hidden !important;
     opacity: 0 !important;
     pointer-events: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 .top-tab:hover { background: #F1F5F9; }
 .top-tab.active {
