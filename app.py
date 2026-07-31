@@ -671,6 +671,7 @@ with col_main:
         )
 
         if cover_img:
+            cover_img.seek(0)
             st.image(cover_img, caption="Cover page preview", width=240)
 
         st.markdown('<div class="rp-divider"></div>', unsafe_allow_html=True)
@@ -703,6 +704,7 @@ with col_main:
                 thumb_cols = st.columns(len(row_imgs), gap="small")
                 for col, f in zip(thumb_cols, row_imgs):
                     with col:
+                        f.seek(0)
                         st.image(f, caption=f.name, use_container_width=True)
 
             st.markdown('<div class="rp-divider"></div>', unsafe_allow_html=True)
