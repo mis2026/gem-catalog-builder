@@ -319,50 +319,13 @@ def _render_clean(page: fitz.Page, rect: fitz.Rect) -> bytes:
     return buf.getvalue()
 
 
-def _row_col_rects(page: fitz.Page, bboxes: list) -> list:
-    """
-    Return one crop fitz.Rect per bbox, laid out by actual row/column
-    position instead of a fixed 2x2 quadrant split.
-
-    A strict quadrant split breaks the moment a page isn't a clean 2x2
-    grid — e.g. two entries side by side on top, then ONE entry spanning
-    the full page width underneath (S.No 7088's layout). A fixed
-    left/right split still cuts that lone bottom entry down to its left
-    half. Instead: cluster entries into rows by their y position, then
-    within each row split columns only among the entries actually in
-    that row — so a row with a single entry gets the row's full width,
-    and a row with two entries splits between just those two.
-    """
+def _quadrant_rect(page: fitz.Page, bbox) -> fitz.Rect:
     pw, ph = page.rect.width, page.rect.height
-    n = len(bboxes)
-
-    order = sorted(range(n), key=lambda i: bboxes[i][1])
-    y_gap_thresh = ph * 0.12
-    rows = [[order[0]]]
-    for idx in order[1:]:
-        if bboxes[idx][1] - bboxes[rows[-1][-1]][1] > y_gap_thresh:
-            rows.append([idx])
-        else:
-            rows[-1].append(idx)
-
-    row_y = [min(bboxes[i][1] for i in row) for row in rows]
-    row_top, row_bottom = [], []
-    for r in range(len(rows)):
-        row_top.append(0.0 if r == 0 else (row_y[r-1] + row_y[r]) / 2)
-        row_bottom.append(ph if r == len(rows) - 1 else (row_y[r] + row_y[r+1]) / 2)
-
-    rects = [None] * n
-    for r, row in enumerate(rows):
-        row.sort(key=lambda i: bboxes[i][0])
-        top, bottom = row_top[r], row_bottom[r]
-        if len(row) == 1:
-            rects[row[0]] = fitz.Rect(0, top, pw, bottom)
-        else:
-            xs = [bboxes[i][0] for i in row]
-            col_bounds = [0.0] + [(xs[i] + xs[i+1]) / 2 for i in range(len(row) - 1)] + [pw]
-            for ci, idx in enumerate(row):
-                rects[idx] = fitz.Rect(col_bounds[ci], top, col_bounds[ci+1], bottom)
-    return rects
+    l, t   = bbox[0] < GRID_X, bbox[1] < GRID_Y
+    if l and t:      return fitz.Rect(0,      0,      GRID_X, GRID_Y)
+    if not l and t:  return fitz.Rect(GRID_X, 0,      pw,     GRID_Y)
+    if l and not t:  return fitz.Rect(0,      GRID_Y, GRID_X, ph)
+    return fitz.Rect(GRID_X, GRID_Y, pw, ph)
 
 
 def build_pdf(pages_jpg: list[bytes]) -> bytes:
@@ -581,11 +544,26 @@ with col_main:
                     if not lines: continue
                     multi = len(lines) > 1
                     if multi:
-                        rects = _row_col_rects(page, [bbox for _, bbox in lines])
-                        for (sno, _bbox), rect in zip(lines, rects):
-                            registry[sno] = _render_clean(page, rect)
+                        # Row-aware cropping. Split gems into a top band and a
+                        # bottom band (by GRID_Y). Within a band, two gems split
+                        # left/right at GRID_X (standard 4-up quadrants); a band
+                        # holding a single gem spans the FULL page width — this
+                        # captures wide, full-width rows like a lone bottom entry
+                        # instead of clipping it to half.
+                        pw, ph    = page.rect.width, page.rect.height
+                        top_count = sum(1 for _, bb in lines if bb[1] < GRID_Y)
+                        bot_count = len(lines) - top_count
+                        for sno, bbox in lines:
+                            row_top   = bbox[1] < GRID_Y
+                            y0, y1    = (0, GRID_Y) if row_top else (GRID_Y, ph)
+                            row_count = top_count if row_top else bot_count
+                            if row_count <= 1:
+                                x0, x1 = 0, pw
+                            else:
+                                x0, x1 = (0, GRID_X) if bbox[0] < GRID_X else (GRID_X, pw)
+                            registry[sno] = _render_clean(page, fitz.Rect(x0, y0, x1, y1))
                     else:
-                        for sno, _bbox in lines:
+                        for sno, bbox in lines:
                             registry[sno] = _render_clean(page, page.rect)
 
                 doc.close()
