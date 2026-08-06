@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import fitz
-import re, io
+import re, io, gc
 import numpy as np
 from PIL import Image
 
@@ -288,6 +288,12 @@ for k, v in {
     "selected_snos":  [],
     "cover_page_jpg": None,
     "upload_fname":   "",
+    "scanned_fname":  "",
+    "scan_active":    False,
+    "scan_bytes":     None,
+    "scan_idx":       0,
+    "scan_total":     0,
+    "scan_partial":   {},
 }.items():
     if k not in st.session_state:
         st.session_state[k] = v
@@ -487,17 +493,74 @@ with col_main:
                 st.session_state.selected_snos  = []
                 st.session_state.ms_snos        = []
                 st.session_state.cover_page_jpg = None
+                st.session_state.scanned_fname  = ""
+                st.session_state.scan_active    = False
+                st.session_state.scan_bytes     = None
+                st.session_state.scan_idx       = 0
+                st.session_state.scan_total     = 0
+                st.session_state.scan_partial   = {}
 
             if rescan_btn:
                 st.session_state.gem_registry   = {}
                 st.session_state.selected_snos  = []
                 st.session_state.ms_snos        = []
                 st.session_state.cover_page_jpg = None
+                st.session_state.scanned_fname  = ""
+                st.session_state.scan_active    = False
+                st.session_state.scan_bytes     = None
+                st.session_state.scan_idx       = 0
+                st.session_state.scan_total     = 0
+                st.session_state.scan_partial   = {}
                 st.rerun()
 
-            needs_scan = (scan_btn or not st.session_state.gem_registry) and bool(file_bytes)
+            # A scan is needed only if this exact file hasn't been fully
+            # scanned yet, or the user explicitly asked for one. Checking
+            # `not st.session_state.gem_registry` instead of scanned_fname
+            # was the earlier bug: a scan that legitimately found zero
+            # entries left an empty (falsy) registry, so every rerun looked
+            # "not yet scanned" and scanned again forever.
+            needs_new_scan = (
+                (scan_btn or st.session_state.scanned_fname != fname)
+                and not st.session_state.scan_active
+                and bool(file_bytes)
+            )
 
-            if needs_scan:
+            if needs_new_scan:
+                # Kick off a fresh scan: figure out the page count and grab
+                # the cover once, then hand off to the chunked loop below.
+                # This init step is cheap (no cropping yet) so it's safe to
+                # do inline before the first rerun.
+                doc = fitz.open(stream=file_bytes, filetype="pdf")
+                st.session_state.scan_total = len(doc)
+                cover_pix = doc[0].get_pixmap(matrix=fitz.Matrix(RENDER_ZOOM, RENDER_ZOOM))
+                cover_arr = np.frombuffer(cover_pix.samples, dtype=np.uint8).reshape(
+                    cover_pix.height, cover_pix.width, cover_pix.n)
+                cover_buf = io.BytesIO()
+                Image.fromarray(cover_arr[:, :, :3]).save(cover_buf, "JPEG", quality=92)
+                st.session_state.cover_page_jpg = cover_buf.getvalue()
+                doc.close()
+                del cover_pix, cover_arr
+
+                st.session_state.scan_active  = True
+                st.session_state.scan_bytes   = file_bytes
+                st.session_state.scan_idx     = 0
+                st.session_state.scan_partial = {}
+                st.rerun()
+
+            if st.session_state.scan_active:
+                # Process a small BATCH of pages per rerun instead of the
+                # whole PDF in one blocking loop. A large catalog rendered
+                # page-by-page at 2x zoom in a single unbroken call is a lot
+                # of held memory and a long-running script — on a
+                # resource-limited host that's exactly what gets the app
+                # process killed and restarted mid-scan, which looks like an
+                # endless reload loop that "never finishes scanning." Small
+                # PDFs finish before hitting that ceiling; big ones don't.
+                # Splitting into short batches with a rerun in between keeps
+                # each run fast and lets memory from prior pages get
+                # collected before the next batch starts.
+                SCAN_BATCH = 4
+
                 st.markdown('<div class="rp-divider"></div>', unsafe_allow_html=True)
                 st.markdown(
                     '<div class="scan-header">'
@@ -506,33 +569,24 @@ with col_main:
                     '</div>',
                     unsafe_allow_html=True,
                 )
-                prog   = st.progress(0)
-                status = st.empty()
+                total = st.session_state.scan_total
+                start = st.session_state.scan_idx
+                st.progress(min(start / total, 1.0) if total else 0)
+                st.markdown(
+                    f'<div class="scan-status-row">'
+                    f'<span class="scan-page-info">'
+                    f'Page {min(start + 1, total)} <span>of {total}</span>'
+                    f'</span>'
+                    f'<span class="scan-gems-badge">'
+                    f'💎 {len(st.session_state.scan_partial)} gems found'
+                    f'</span>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
 
-                doc      = fitz.open(stream=file_bytes, filetype="pdf")
-                total    = len(doc)
-                registry = {}
-
-                cover_pix = doc[0].get_pixmap(matrix=fitz.Matrix(RENDER_ZOOM, RENDER_ZOOM))
-                cover_arr = np.frombuffer(cover_pix.samples, dtype=np.uint8).reshape(
-                    cover_pix.height, cover_pix.width, cover_pix.n)
-                cover_buf = io.BytesIO()
-                Image.fromarray(cover_arr[:, :, :3]).save(cover_buf, "JPEG", quality=92)
-                st.session_state.cover_page_jpg = cover_buf.getvalue()
-
-                for pn in range(total):
-                    prog.progress((pn + 1) / total)
-                    status.markdown(
-                        f'<div class="scan-status-row">'
-                        f'<span class="scan-page-info">'
-                        f'Page {pn + 1} <span>of {total}</span>'
-                        f'</span>'
-                        f'<span class="scan-gems-badge">'
-                        f'💎 {len(registry)} gems found'
-                        f'</span>'
-                        f'</div>',
-                        unsafe_allow_html=True,
-                    )
+                doc = fitz.open(stream=st.session_state.scan_bytes, filetype="pdf")
+                end = min(start + SCAN_BATCH, total)
+                for pn in range(start, end):
                     page  = doc[pn]
                     lines = []
                     for block in page.get_text("dict")["blocks"]:
@@ -541,35 +595,44 @@ with col_main:
                             txt = "".join(s["text"] for s in line["spans"])
                             m   = re.search(r'S\.No[-\s]*(\d+)', txt, re.IGNORECASE)
                             if m: lines.append((m.group(1), line["bbox"]))
-                    if not lines: continue
-                    multi = len(lines) > 1
-                    if multi:
-                        # Row-aware cropping. Split gems into a top band and a
-                        # bottom band (by GRID_Y). Within a band, two gems split
-                        # left/right at GRID_X (standard 4-up quadrants); a band
-                        # holding a single gem spans the FULL page width — this
-                        # captures wide, full-width rows like a lone bottom entry
-                        # instead of clipping it to half.
-                        pw, ph    = page.rect.width, page.rect.height
-                        top_count = sum(1 for _, bb in lines if bb[1] < GRID_Y)
-                        bot_count = len(lines) - top_count
-                        for sno, bbox in lines:
-                            row_top   = bbox[1] < GRID_Y
-                            y0, y1    = (0, GRID_Y) if row_top else (GRID_Y, ph)
-                            row_count = top_count if row_top else bot_count
-                            if row_count <= 1:
-                                x0, x1 = 0, pw
-                            else:
-                                x0, x1 = (0, GRID_X) if bbox[0] < GRID_X else (GRID_X, pw)
-                            registry[sno] = _render_clean(page, fitz.Rect(x0, y0, x1, y1))
-                    else:
-                        for sno, bbox in lines:
-                            registry[sno] = _render_clean(page, page.rect)
-
+                    if lines:
+                        multi = len(lines) > 1
+                        if multi:
+                            # Row-aware cropping. Split gems into a top band and a
+                            # bottom band (by GRID_Y). Within a band, two gems split
+                            # left/right at GRID_X (standard 4-up quadrants); a band
+                            # holding a single gem spans the FULL page width — this
+                            # captures wide, full-width rows like a lone bottom entry
+                            # instead of clipping it to half.
+                            pw, ph    = page.rect.width, page.rect.height
+                            top_count = sum(1 for _, bb in lines if bb[1] < GRID_Y)
+                            bot_count = len(lines) - top_count
+                            for sno, bbox in lines:
+                                row_top   = bbox[1] < GRID_Y
+                                y0, y1    = (0, GRID_Y) if row_top else (GRID_Y, ph)
+                                row_count = top_count if row_top else bot_count
+                                if row_count <= 1:
+                                    x0, x1 = 0, pw
+                                else:
+                                    x0, x1 = (0, GRID_X) if bbox[0] < GRID_X else (GRID_X, pw)
+                                st.session_state.scan_partial[sno] = _render_clean(
+                                    page, fitz.Rect(x0, y0, x1, y1))
+                        else:
+                            for sno, bbox in lines:
+                                st.session_state.scan_partial[sno] = _render_clean(page, page.rect)
+                    del page
                 doc.close()
-                prog.empty()
-                status.empty()
-                st.session_state.gem_registry = registry
+                del doc
+                gc.collect()
+
+                st.session_state.scan_idx = end
+
+                if end >= total:
+                    st.session_state.gem_registry  = st.session_state.scan_partial
+                    st.session_state.scanned_fname = fname
+                    st.session_state.scan_active   = False
+                    st.session_state.scan_bytes    = None
+                    st.session_state.scan_partial  = {}
                 st.rerun()
 
             reg = st.session_state.gem_registry
@@ -668,6 +731,12 @@ with col_main:
                             st.session_state.selected_snos  = []
                             st.session_state.cover_page_jpg = None
                             st.session_state.upload_fname   = ""
+                            st.session_state.scanned_fname  = ""
+                            st.session_state.scan_active    = False
+                            st.session_state.scan_bytes     = None
+                            st.session_state.scan_idx       = 0
+                            st.session_state.scan_total     = 0
+                            st.session_state.scan_partial   = {}
                             st.rerun()
                         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -776,4 +845,3 @@ with col_main:
                 st.markdown('</div>', unsafe_allow_html=True)
         else:
             st.info("Upload gem images above to get started.")
-
