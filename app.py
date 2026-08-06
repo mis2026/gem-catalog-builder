@@ -4,13 +4,6 @@ import fitz
 import re, io, gc
 import numpy as np
 from PIL import Image
-from collections import defaultdict
-
-try:
-    import pytesseract
-    _OCR_AVAILABLE = True
-except ImportError:
-    _OCR_AVAILABLE = False
 
 st.set_page_config(
     page_title="Lunawat Gem Catalog",
@@ -289,12 +282,6 @@ html, body,
 # CORE LOGIC
 # ═══════════════════════════════════════════════════════
 GRID_X, GRID_Y, RENDER_ZOOM = 360, 277, 2.0  # 2.0 = ~36% faster than 2.5
-OCR_ZOOM = 2.0  # resolution used only when a page has no text layer
-
-# Same pattern used for both the fast (real text layer) path and the OCR
-# fallback path, kept slightly more permissive than a plain "S.No" match
-# so small OCR misreads (missing dot, extra space) still match.
-SNO_PATTERN = re.compile(r'S[.\s]?NO[-:\s]*(\d+)', re.IGNORECASE)
 
 for k, v in {
     "gem_registry":   {},
@@ -307,8 +294,6 @@ for k, v in {
     "scan_idx":       0,
     "scan_total":     0,
     "scan_partial":   {},
-    "ocr_pages_used": 0,
-    "ocr_warned":     False,
 }.items():
     if k not in st.session_state:
         st.session_state[k] = v
@@ -340,61 +325,7 @@ def _render_clean(page: fitz.Page, rect: fitz.Rect) -> bytes:
     return buf.getvalue()
 
 
-def _ocr_lines(page: fitz.Page) -> list:
-    """
-    Fallback for pages with NO extractable text layer — i.e. the whole page
-    is one flattened/scanned image, so page.get_text() returns nothing even
-    though the S.No labels are clearly visible to a person. This renders
-    the page to an image and reads it with Tesseract OCR instead.
-
-    Returns the same shape as the text-layer path: a list of
-    (sno_string, bbox) tuples, with bbox in the same page-point coordinate
-    space page.get_text() bboxes use — so it plugs into the existing
-    row/column cropping logic unchanged.
-
-    Tesseract groups words into "lines" by (block, paragraph, line) number,
-    but for a 2-up or 4-up grid it often merges two side-by-side labels
-    into a single detected line because they sit at the same height. Taking
-    only the first regex match per line would silently drop every entry
-    after the first on that line. Instead this finds ALL matches per line
-    via finditer, and for each match works out which specific word(s)
-    contributed those characters so the bbox reflects just that one entry's
-    label, not the whole merged line.
-    """
-    if not _OCR_AVAILABLE:
-        return []
-    pix = page.get_pixmap(matrix=fitz.Matrix(OCR_ZOOM, OCR_ZOOM))
-    img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
-    data = pytesseract.image_to_data(img, output_type=pytesseract.Output.DICT)
-
-    lines = defaultdict(list)
-    for i in range(len(data["text"])):
-        txt = data["text"][i].strip()
-        if not txt:
-            continue
-        key = (data["block_num"][i], data["par_num"][i], data["line_num"][i])
-        lines[key].append((txt, data["left"][i], data["top"][i], data["width"][i], data["height"][i]))
-
-    found = []
-    for words in lines.values():
-        parts, offsets, pos = [], [], 0
-        for w in words:
-            parts.append(w[0])
-            offsets.append((pos, pos + len(w[0]), w))
-            pos += len(w[0]) + 1
-        line_text = " ".join(parts)
-        for m in SNO_PATTERN.finditer(line_text):
-            ms, me = m.span()
-            contributing = [w for (s, e, w) in offsets if not (e <= ms or s >= me)]
-            if not contributing:
-                continue
-            x0 = min(w[1] for w in contributing); y0 = min(w[2] for w in contributing)
-            x1 = max(w[1] + w[3] for w in contributing); y1 = max(w[2] + w[4] for w in contributing)
-            found.append((m.group(1), (x0 / OCR_ZOOM, y0 / OCR_ZOOM, x1 / OCR_ZOOM, y1 / OCR_ZOOM)))
-    return found
-
-
-
+def _quadrant_rect(page: fitz.Page, bbox) -> fitz.Rect:
     pw, ph = page.rect.width, page.rect.height
     l, t   = bbox[0] < GRID_X, bbox[1] < GRID_Y
     if l and t:      return fitz.Rect(0,      0,      GRID_X, GRID_Y)
@@ -568,7 +499,6 @@ with col_main:
                 st.session_state.scan_idx       = 0
                 st.session_state.scan_total     = 0
                 st.session_state.scan_partial   = {}
-                st.session_state.ocr_pages_used = 0
 
             if rescan_btn:
                 st.session_state.gem_registry   = {}
@@ -581,7 +511,6 @@ with col_main:
                 st.session_state.scan_idx       = 0
                 st.session_state.scan_total     = 0
                 st.session_state.scan_partial   = {}
-                st.session_state.ocr_pages_used = 0
                 st.rerun()
 
             # A scan is needed only if this exact file hasn't been fully
@@ -664,17 +593,8 @@ with col_main:
                         if block["type"] != 0: continue
                         for line in block["lines"]:
                             txt = "".join(s["text"] for s in line["spans"])
-                            m   = SNO_PATTERN.search(txt)
+                            m   = re.search(r'S\.No[-\s]*(\d+)', txt, re.IGNORECASE)
                             if m: lines.append((m.group(1), line["bbox"]))
-                    if not lines:
-                        # No S.No found in the real text layer — this page
-                        # may simply have no gem entries, OR it may be a
-                        # flattened/scanned image with no text layer at all
-                        # (get_text() returns nothing to search either way).
-                        # Try OCR before concluding the page is empty.
-                        lines = _ocr_lines(page)
-                        if lines:
-                            st.session_state.ocr_pages_used += 1
                     if lines:
                         multi = len(lines) > 1
                         if multi:
@@ -719,24 +639,12 @@ with col_main:
 
             if not reg:
                 st.warning("No S.No entries detected in this PDF.")
-                if not _OCR_AVAILABLE:
-                    st.info(
-                        "This PDF may have no real text layer (scanned/flattened "
-                        "pages) — OCR would be needed to read it, but the OCR "
-                        "engine isn't installed on this deployment. Add "
-                        "`pytesseract` to requirements.txt and `tesseract-ocr` "
-                        "to packages.txt, then redeploy."
-                    )
             else:
                 st.markdown('<div class="rp-divider"></div>', unsafe_allow_html=True)
-                ocr_note = (
-                    f' · {st.session_state.ocr_pages_used} via OCR'
-                    if st.session_state.ocr_pages_used else ''
-                )
                 st.markdown(
                     f'<div class="rp-row">'
                     f'<span class="rp-label" style="margin-bottom:0">Select Serial Numbers</span>'
-                    f'<span class="rp-pill">💎 {len(reg)} entries found{ocr_note}</span>'
+                    f'<span class="rp-pill">💎 {len(reg)} entries found</span>'
                     f'</div>',
                     unsafe_allow_html=True,
                 )
@@ -829,7 +737,6 @@ with col_main:
                             st.session_state.scan_idx       = 0
                             st.session_state.scan_total     = 0
                             st.session_state.scan_partial   = {}
-                            st.session_state.ocr_pages_used = 0
                             st.rerun()
                         st.markdown('</div>', unsafe_allow_html=True)
 
