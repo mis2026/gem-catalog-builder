@@ -1,2 +1,5 @@
 streamlit
 pymupdf
+numpy
+Pillow
+pytesseract
