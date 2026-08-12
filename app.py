@@ -281,7 +281,7 @@ html, body,
 # ═══════════════════════════════════════════════════════
 # CORE LOGIC
 # ═══════════════════════════════════════════════════════
-GRID_X, GRID_Y, RENDER_ZOOM = 360, 277, 4.0  # 4.0 = ultra-high quality (matches professional scan)
+GRID_X, GRID_Y, RENDER_ZOOM = 360, 277, 5.0  # 5.0 = ultra-high resolution (professional scan quality)
 
 for k, v in {
     "gem_registry":   {},
@@ -321,9 +321,16 @@ def _render_clean(page: fitz.Page, rect: fitz.Rect) -> bytes:
     arr   = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, pix.n)
     # QUALITY FIX: Skip _remove_border() — it degrades sharpness. Use full rendered image.
     img_data = arr[:, :, :3]
+    
+    # ENHANCEMENT: Apply sharpening filter for crisper text & gems
+    from PIL import ImageFilter
+    img = Image.fromarray(img_data)
+    img = img.filter(ImageFilter.SHARPEN)
+    img = img.filter(ImageFilter.SHARPEN)  # Apply twice for maximum crispness
+    
     buf   = io.BytesIO()
-    # QUALITY FIX: Maximum quality JPEG (98) + 4x render zoom for crystal-clear catalog photos
-    Image.fromarray(img_data).save(buf, "JPEG", quality=98)
+    # QUALITY FIX: Maximum quality JPEG (99) + 5x render zoom + double sharpening
+    img.save(buf, "JPEG", quality=99, optimize=False)
     return buf.getvalue()
 
 
@@ -538,8 +545,12 @@ with col_main:
                 cover_arr = np.frombuffer(cover_pix.samples, dtype=np.uint8).reshape(
                     cover_pix.height, cover_pix.width, cover_pix.n)
                 cover_buf = io.BytesIO()
-                # QUALITY FIX: Maximum quality JPEG (98) + 4x render zoom, no border removal
-                Image.fromarray(cover_arr[:, :, :3]).save(cover_buf, "JPEG", quality=98)
+                # QUALITY FIX: Apply double sharpening + maximum quality JPEG (99) + 5x render zoom
+                from PIL import ImageFilter
+                cover_img = Image.fromarray(cover_arr[:, :, :3])
+                cover_img = cover_img.filter(ImageFilter.SHARPEN)
+                cover_img = cover_img.filter(ImageFilter.SHARPEN)
+                cover_img.save(cover_buf, "JPEG", quality=99, optimize=False)
                 st.session_state.cover_page_jpg = cover_buf.getvalue()
                 doc.close()
                 del cover_pix, cover_arr
@@ -821,16 +832,22 @@ with col_main:
                     if cover_img:
                         cover_img.seek(0)
                         pil_cover = Image.open(cover_img).convert("RGB")
+                        # QUALITY FIX: Double sharpening for crispy cover page
+                        from PIL import ImageFilter
+                        pil_cover = pil_cover.filter(ImageFilter.SHARPEN)
+                        pil_cover = pil_cover.filter(ImageFilter.SHARPEN)
                         cb = io.BytesIO()
-                        # QUALITY FIX: Maximum quality JPEG (98) for uploaded cover images
-                        pil_cover.save(cb, "JPEG", quality=98)
+                        pil_cover.save(cb, "JPEG", quality=99, optimize=False)
                         pages_jpg.append(cb.getvalue())
                     for f in gem_images:
                         f.seek(0)
                         pil_img = Image.open(f).convert("RGB")
+                        # QUALITY FIX: Double sharpening for crispy gem images
+                        from PIL import ImageFilter
+                        pil_img = pil_img.filter(ImageFilter.SHARPEN)
+                        pil_img = pil_img.filter(ImageFilter.SHARPEN)
                         gb = io.BytesIO()
-                        # QUALITY FIX: Maximum quality JPEG (98) for uploaded gem images
-                        pil_img.save(gb, "JPEG", quality=98)
+                        pil_img.save(gb, "JPEG", quality=99, optimize=False)
                         pages_jpg.append(gb.getvalue())
                     pdf_bytes = build_pdf(pages_jpg)
 
