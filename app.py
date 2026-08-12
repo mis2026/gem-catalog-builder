@@ -281,7 +281,7 @@ html, body,
 # ═══════════════════════════════════════════════════════
 # CORE LOGIC
 # ═══════════════════════════════════════════════════════
-GRID_X, GRID_Y, RENDER_ZOOM = 360, 277, 2.0  # 2.0 = ~36% faster than 2.5
+GRID_X, GRID_Y, RENDER_ZOOM = 360, 277, 3.0  # 3.0 = maximum quality for catalog photos
 
 for k, v in {
     "gem_registry":   {},
@@ -321,8 +321,8 @@ def _render_clean(page: fitz.Page, rect: fitz.Rect) -> bytes:
     arr   = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, pix.n)
     clean = _remove_border(arr[:, :, :3])
     buf   = io.BytesIO()
-    # QUALITY FIX: Increased from 88 to 96 to preserve gem image quality
-    Image.fromarray(clean).save(buf, "JPEG", quality=96)
+    # QUALITY FIX: Maximum quality JPEG (98) + 3x render zoom for crisp catalog photos
+    Image.fromarray(clean).save(buf, "JPEG", quality=98)
     return buf.getvalue()
 
 
@@ -537,8 +537,8 @@ with col_main:
                 cover_arr = np.frombuffer(cover_pix.samples, dtype=np.uint8).reshape(
                     cover_pix.height, cover_pix.width, cover_pix.n)
                 cover_buf = io.BytesIO()
-                # QUALITY FIX: Increased from 92 to 96 to preserve cover page quality
-                Image.fromarray(cover_arr[:, :, :3]).save(cover_buf, "JPEG", quality=96)
+                # QUALITY FIX: Maximum quality JPEG (98) + 3x render zoom for crisp cover page
+                Image.fromarray(cover_arr[:, :, :3]).save(cover_buf, "JPEG", quality=98)
                 st.session_state.cover_page_jpg = cover_buf.getvalue()
                 doc.close()
                 del cover_pix, cover_arr
@@ -821,15 +821,15 @@ with col_main:
                         cover_img.seek(0)
                         pil_cover = Image.open(cover_img).convert("RGB")
                         cb = io.BytesIO()
-                        # QUALITY FIX: Increased from 92 to 96 for cover page quality
-                        pil_cover.save(cb, "JPEG", quality=96)
+                        # QUALITY FIX: Maximum quality JPEG (98) for uploaded cover images
+                        pil_cover.save(cb, "JPEG", quality=98)
                         pages_jpg.append(cb.getvalue())
                     for f in gem_images:
                         f.seek(0)
                         pil_img = Image.open(f).convert("RGB")
                         gb = io.BytesIO()
-                        # QUALITY FIX: Increased from 92 to 96 for gem image quality
-                        pil_img.save(gb, "JPEG", quality=96)
+                        # QUALITY FIX: Maximum quality JPEG (98) for uploaded gem images
+                        pil_img.save(gb, "JPEG", quality=98)
                         pages_jpg.append(gb.getvalue())
                     pdf_bytes = build_pdf(pages_jpg)
 
