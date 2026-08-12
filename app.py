@@ -281,7 +281,7 @@ html, body,
 # ═══════════════════════════════════════════════════════
 # CORE LOGIC
 # ═══════════════════════════════════════════════════════
-GRID_X, GRID_Y, RENDER_ZOOM = 360, 277, 3.0  # 3.0 = maximum quality for catalog photos
+GRID_X, GRID_Y, RENDER_ZOOM = 360, 277, 4.0  # 4.0 = ultra-high quality (matches professional scan)
 
 for k, v in {
     "gem_registry":   {},
@@ -319,10 +319,11 @@ def _remove_border(arr: np.ndarray, dark: int = 40) -> np.ndarray:
 def _render_clean(page: fitz.Page, rect: fitz.Rect) -> bytes:
     pix   = page.get_pixmap(matrix=fitz.Matrix(RENDER_ZOOM, RENDER_ZOOM), clip=rect)
     arr   = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, pix.n)
-    clean = _remove_border(arr[:, :, :3])
+    # QUALITY FIX: Skip _remove_border() — it degrades sharpness. Use full rendered image.
+    img_data = arr[:, :, :3]
     buf   = io.BytesIO()
-    # QUALITY FIX: Maximum quality JPEG (98) + 3x render zoom for crisp catalog photos
-    Image.fromarray(clean).save(buf, "JPEG", quality=98)
+    # QUALITY FIX: Maximum quality JPEG (98) + 4x render zoom for crystal-clear catalog photos
+    Image.fromarray(img_data).save(buf, "JPEG", quality=98)
     return buf.getvalue()
 
 
@@ -537,7 +538,7 @@ with col_main:
                 cover_arr = np.frombuffer(cover_pix.samples, dtype=np.uint8).reshape(
                     cover_pix.height, cover_pix.width, cover_pix.n)
                 cover_buf = io.BytesIO()
-                # QUALITY FIX: Maximum quality JPEG (98) + 3x render zoom for crisp cover page
+                # QUALITY FIX: Maximum quality JPEG (98) + 4x render zoom, no border removal
                 Image.fromarray(cover_arr[:, :, :3]).save(cover_buf, "JPEG", quality=98)
                 st.session_state.cover_page_jpg = cover_buf.getvalue()
                 doc.close()
